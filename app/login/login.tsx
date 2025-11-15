@@ -1,5 +1,6 @@
 'use client'
 
+import { signInWithGoogle } from '@/lib/services/auth';
 import React, { useState } from 'react';
 
 interface LoginFormData {
@@ -7,13 +8,30 @@ interface LoginFormData {
     password: string;
 }
 
-export const LoginPage: React.FC = () => {
+export default function LoginPage() {
+    
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
         password: '',
     });
     const [error, setError] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
+
+    const handleGoogleLogin = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            const user = await signInWithGoogle();
+            console.log('Logged in user:', user);
+
+        } catch (err) {
+            console.error(err);
+            setError('Google login failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -23,21 +41,21 @@ export const LoginPage: React.FC = () => {
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
+    // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    //     e.preventDefault();
+    //     setError('');
+    //     setLoading(true);
 
-        try {
-            // Add your authentication logic here
-            console.log('Login attempt:', formData);
-            // Example: await authenticateUser(formData);
-        } catch (err) {
-            setError('Invalid email or password');
-        } finally {
-            setLoading(false);
-        }
-    };
+    //     try {
+    //         // Add your authentication logic here
+    //         console.log('Login attempt:', formData);
+    //         // Example: await authenticateUser(formData);
+    //     } catch (err) {
+    //         setError('Invalid email or password');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     return (
         <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-gradient-to-b from-white via-slate-50 to-slate-50">
@@ -49,7 +67,7 @@ export const LoginPage: React.FC = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+                <form onSubmit={handleGoogleLogin} className="mt-4 flex flex-col gap-3">
                     <input
                         type="email"
                         name="email"
@@ -70,6 +88,7 @@ export const LoginPage: React.FC = () => {
                     />
                     <button
                         type="submit"
+                        onClick={handleGoogleLogin}
                         disabled={loading}
                         className="h-11 rounded-md bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                     >
