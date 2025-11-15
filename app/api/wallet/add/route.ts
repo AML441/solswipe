@@ -4,6 +4,7 @@ import admin from "@/lib/firebaseAdmin";
 export async function POST(req: NextRequest) {
   try {
     const { uid, walletAddress } = await req.json();
+    console.log("UID", uid);
 
     if (!uid || !walletAddress) {
       return NextResponse.json(
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     const db = admin.firestore();
     const userRef = db.collection("users").doc(uid);
 
-    // Add wallet to array (arrayUnion avoids duplicates)
+    // Add wallet to array (avoid duplicates)
     await userRef.set(
       {
         wallets: admin.firestore.FieldValue.arrayUnion(walletAddress),
