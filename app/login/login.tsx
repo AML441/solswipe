@@ -26,7 +26,7 @@ export const LoginPage = () => {
 
             const data = await res.json();
             if (data.success) {
-                router.push('/dashboard');
+                router.push('/home');
             } else {
                 setError('Login failed on server.');
             }

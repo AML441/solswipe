@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       (session as any).publicKey = token.sub;
       if (session.user) {
+        session.user.uid = token.sub;
         session.user.name = token.sub;
         session.user.image = `https://ui-avatars.com/api/?name=${token.sub}&background=random`;
       }
