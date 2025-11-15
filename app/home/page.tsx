@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import bs58 from "bs58";
 import { SigninMessage } from "@/lib/SigninMessage";
+import { SparklesCore } from "@/components/sparkles";
 
 export default function HomePage() {
   const { publicKey, signMessage, connected, wallet } = useWallet();
@@ -117,6 +118,17 @@ export default function HomePage() {
           </button>
         </div>
       )}
+      <div className="w-full absolute inset-0 h-screen">
+        <SparklesCore
+          id="tsparticlesfullpage"
+          background="transparent"
+          minSize={0.6}
+          maxSize={1.4}
+          particleDensity={100}
+          className="w-full h-full"
+          particleColor="#FFFFFF"
+        />
+      </div>
     </div>
   );
 }
