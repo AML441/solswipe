@@ -199,8 +199,8 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-bold">Connect Your Wallet</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-linear-to-b from-indigo-900 to-slate-900">
+      <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
 
       {/* Show wallet installation prompt if needed */}
       {!window.solana && (
@@ -232,7 +232,7 @@ export default function HomePage() {
           <button
             onClick={handleSignInWithWallet}
             disabled={isSigningIn}
-            className="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 font-semibold"
+            className="px-6 py-3 cyan-200 text-slate-900 rounded hover:bg-teal-600 disabled:bg-gray-400 font-semibold"
           >
             {isSigningIn ? "Signing In..." : "Sign In with This Wallet"}
           </button>
@@ -240,7 +240,7 @@ export default function HomePage() {
       )}
 
       {session && (
-        <div className="p-4 bg-green-50 border-2 border-green-500 rounded">
+        <div className="p-4 bg-cyan-50 border-2 border-cyan-500 rounded">
           <p className="text-green-800 font-semibold">
             ✅ Signed in: {(session as any).publicKey}
           </p>
