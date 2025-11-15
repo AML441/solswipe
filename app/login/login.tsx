@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signInWithGoogle } from '@/lib/services/auth';
 import { useRouter } from 'next/navigation';
+import { SparklesCore } from "@/components/sparkles";
 
 export const LoginPage = () => {
     const [loading, setLoading] = useState(false);
@@ -60,6 +61,17 @@ export const LoginPage = () => {
                    {loading ? 'Logging in...' : 'Login with Google'}
                </button>
            </div>
+           <div className="w-full absolute inset-0 h-screen">
+            <SparklesCore
+            id="tsparticlesfullpage"
+            background="transparent"
+            minSize={0.6}
+            maxSize={1.4}
+            particleDensity={100}
+            className="w-full h-full"
+            particleColor="#FFFFFF"
+            />
+        </div>
        </div>
    );
 };
