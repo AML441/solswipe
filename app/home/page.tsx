@@ -10,6 +10,11 @@ export default function HomePage() {
   const { publicKey, signMessage, connected, wallet } = useWallet();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
+  const [hasPhantom, setHasPhantom] = useState<boolean | null>(null);
+
+useEffect(() => {
+  setHasPhantom(typeof window !== "undefined" && !!window.solana);
+}, []);
 
   // Load Firebase UID from localStorage
   useEffect(() => {
@@ -82,9 +87,9 @@ export default function HomePage() {
      <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
 
       {/* Wallet installation prompt */}
-      {!window.solana && (
+      {hasPhantom === false && (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-         <p className="text-yellow-800">
+          <p className="text-yellow-800">
             ⚠️ Phantom wallet not detected. Install from{" "}
             <a
               href="https://phantom.app/"
