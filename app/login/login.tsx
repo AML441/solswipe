@@ -49,8 +49,8 @@ export const LoginPage: React.FC = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
-                    <input
+                <form  className="mt-4 flex flex-col gap-3">
+                    {/* <input
                         type="email"
                         name="email"
                         placeholder="Email"
@@ -67,7 +67,7 @@ export const LoginPage: React.FC = () => {
                         onChange={handleChange}
                         required
                         className="h-11 px-3 border border-slate-200 rounded-md text-slate-900 placeholder-slate-400 bg-transparent outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
-                    />
+                    /> */}
                     <button
                         type="submit"
                         disabled={loading}
