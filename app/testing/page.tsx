@@ -20,14 +20,16 @@ export default function testing() {
       ];
     
       return (
-        <div>
+        <div className="min-h-screen bg-white flex flex-row">
             <div>
-                <LayoutWithSidebar />
+                <Navbar />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {items.map((item, i) => (
-                <Card key={i} org={item.name} desc={item.description} contact={item.contact} />
-            ))}
+            <div className="flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                {items.map((item, i) => (
+                    <Card key={i} org={item.name} desc={item.description} contact={item.contact} />
+                ))}
+                </div>
             </div>
         </div>
       );
