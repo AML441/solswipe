@@ -16,13 +16,6 @@ export const LoginPage: React.FC = () => {
     const [error, setError] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
 
     const handleGoogleLogin = async () => {
         setError('');
@@ -54,6 +47,7 @@ export const LoginPage: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
+                        onClick={handleGoogleLogin}
                         className="h-11 rounded-md bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                         {loading ? 'Logging in...' : 'Login'}
