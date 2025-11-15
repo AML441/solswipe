@@ -1,5 +1,7 @@
 import Card from "@/components/card";
 import { Organization } from "@/types/organization";
+import Navbar from "@/components/navbar";
+import LayoutWithSidebar from "@/components/navbar";
 
 export default function testing() {
     const items: Organization[] = [
@@ -11,10 +13,16 @@ export default function testing() {
       ];
     
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-          {items.map((item, i) => (
-            <Card key={i} org={item.name} desc={item.description} contact={item.contact} />
-          ))}
+        <div>
+            <div>
+                <LayoutWithSidebar />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {items.map((item, i) => (
+                <Card key={i} org={item.name} desc={item.description} contact={item.contact} />
+            ))}
+            </div>
         </div>
       );
 }
+
