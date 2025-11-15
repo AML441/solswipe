@@ -2,14 +2,21 @@ import Card from "@/components/card";
 import { Organization } from "@/types/organization";
 import Navbar from "@/components/navbar";
 import LayoutWithSidebar from "@/components/navbar";
+import { tagTypes } from "@/types/organization";
 
 export default function testing() {
     const items: Organization[] = [
-        { name: "Org A", description: "Description A", tags: [], contact: "a@gmail.com"},
-        { name: "Org B", description: "Description B", tags: [], contact: "b@gmail.com"},
-        { name: "Org C", description: "Description C", tags: [], contact: "c@gmail.com"},
-        { name: "Org D", description: "Description D", tags: [], contact: "d@gmail.com"},
-        // add as many as you want
+        { name: "BrightFuture Scholars", description: "Provides scholarships, mentorship, and tutoring programs to low-income high school students pursuing STEM fields.", tags: [tagTypes.Education], contact: "contact@brightfuturescholars.org"},
+        { name: "Clean Earth Initiative", description: "Focuses on environmental conservation through community clean-ups, recycling education, and sustainability advocacy.", tags: [tagTypes.Environment], contact: "info@cleanearthinitiative.org"},
+        { name: "Hearts & Homes Animal Rescue", description: "Rescues abandoned or injured animals, offers medical care, and facilitates adoption into loving families.", tags: [tagTypes.AnimalWelfare, tagTypes.Health], contact: "support@heartandhomes.org"},
+        { name: "YouthTech Access Network", description: "Bridges the digital divide by providing laptops, internet access, and coding classes to underserved youth.", tags: [tagTypes.Education,tagTypes.Tech], contact: "hello@youthtechaccess.org"},
+        { name: "Global Food Bank Network", description: "Collects surplus food from restaurants and grocery stores to distribute to those in need, reducing food waste.", tags: [tagTypes.Food], contact: "contact@gfbn.com"},
+        { name: "Global Water Action", description: "Works internationally to create clean water systems, build wells, and promote safe sanitation practices.", tags: [tagTypes.HumanRights,tagTypes.Food, tagTypes.Health], contact: "outreach@globalwateraction.org"},
+        { name: "ElderCare Connection", description: "Supports senior citizens with companionship programs, mobility assistance, and free home wellness visits.", tags: [tagTypes.Health], contact: "care@eldercareconnection.org"},
+        { name: "Green Gardens Urban Farming", description: "Creates community gardens in urban neighborhoods to increase access to fresh food and teach sustainable agriculture.", tags: [tagTypes.Environment,tagTypes.Food], contact: "grow@greengardensuf.com"},
+        { name: "SafePath Domestic Support", description: "Provides safe housing, crisis counseling, and legal resources for individuals escaping domestic violence.", tags: [tagTypes.Health,tagTypes.HumanRights], contact: "help@safepathsupport.org"},
+        { name: "World Literacy Bridge", description: "Promotes global literacy through book drives, mobile libraries, and volunteer teaching programs.", tags: [tagTypes.Education], contact: "contact@worldliteracybridge.org"},
+        { name: "Mindful Minds Foundation", description: "Promotes mental health awareness by offering free workshops, peer support groups, and school outreach programs.", tags: [tagTypes.Health,tagTypes.Media], contact: "info@mmf.com"},
       ];
     
       return (

@@ -13,8 +13,8 @@ export default function Card({org,desc,contact}: CardProps) {
         <p className="text-2xl py-5">{desc}</p>
         <p className="text-2xl">{contact}</p>
         <div className="flex justify-center mt-auto">
-            <button className="border-2 w-full">
-                Payment
+            <button className="border-2 w-full rounded-[.75em] bg-teal-500 text-white font-semibold hover:bg-teal-600 py-2">
+                Make Payment
             </button>
         </div>
     </div>
