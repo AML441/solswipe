@@ -117,23 +117,13 @@ useEffect(() => {
           <button
             onClick={handleSignInWithWallet}
             disabled={isSigningIn}
-            className="px-6 py-3 cyan-200 text-slate-900 rounded hover:bg-teal-600 disabled:bg-gray-400 font-semibold"
+            className="px-6 py-3 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 disabled:bg-gray-400 font-semibold"
           >
             {isSigningIn ? "Signing In..." : "Sign In with This Wallet"}
           </button>
         </div>
       )}
-      <div className="w-full absolute inset-0 h-screen">
-        <SparklesCore
-          id="tsparticlesfullpage"
-          background="transparent"
-          minSize={0.6}
-          maxSize={1.4}
-          particleDensity={100}
-          className="w-full h-full"
-          particleColor="#FFFFFF"
-        />
-      </div>
+
     </div>
   );
 }
