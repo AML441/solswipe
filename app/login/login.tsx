@@ -1,58 +1,62 @@
-'use client'
+'use client';
 
+import { useState } from 'react';
 import { signInWithGoogle } from '@/lib/services/auth';
-import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-interface LoginFormData {
-    email: string;
-    password: string;
-}
+export const LoginPage = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const router = useRouter();
 
-export const LoginPage: React.FC = () => {
-    const [formData, setFormData] = useState<LoginFormData>({
-        email: '',
-        password: '',
-    });
-    const [error, setError] = useState<string>('');
-    const [loading, setLoading] = useState<boolean>(false);
-
-
-    const handleGoogleLogin = async () => {
+    const handleLogin = async () => {
         setError('');
         setLoading(true);
         try {
             const user = await signInWithGoogle();
             console.log('Logged in user:', user);
+            console.log('Token', user.token);
 
+            // Send Firebase token to backend for verification & user creation
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: user.token }),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                router.push('/dashboard');
+            } else {
+                setError('Login failed on server.');
+            }
         } catch (err) {
             console.error(err);
-            setError('Google login failed. Please try again.');
+            setError('Google login failed.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-gradient-to-b from-white via-slate-50 to-slate-50">
+        <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-linear-to-b from-white via-slate-50 to-slate-50">
             <div className="w-full max-w-md bg-white rounded-xl p-8 shadow-lg border border-slate-100">
                 <h1 className="text-center text-2xl font-semibold text-slate-900">Login</h1>
+
                 {error && (
                     <div className="mt-3 bg-rose-50 text-rose-700 px-3 py-2 rounded-md text-sm text-center border border-rose-100">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleGoogleLogin} className="mt-4 flex flex-col gap-3">
-    
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        onClick={handleGoogleLogin}
-                        className="h-11 rounded-md bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                        {loading ? 'Logging in...' : 'Login'}
-                    </button>
-                </form>
+                <button
+                    type="button"
+                    disabled={loading}
+                    onClick={handleLogin}
+                    className="mt-4 h-11 w-full rounded-md bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                    {loading ? 'Logging in...' : 'Login with Google'}
+                </button>
             </div>
         </div>
     );
