@@ -1,3 +1,4 @@
+// components/Providers.tsx
 "use client";
 
 import { SessionProvider } from "next-auth/react";
@@ -16,7 +17,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
+        <WalletProvider 
+          wallets={wallets} 
+          autoConnect={false}
+          onError={(error) => {
+            console.error('Wallet error:', error);
+          }}
+        >
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
