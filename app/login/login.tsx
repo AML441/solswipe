@@ -1,5 +1,6 @@
 'use client'
 
+import { signInWithGoogle } from '@/lib/services/auth';
 import React, { useState } from 'react';
 
 interface LoginFormData {
@@ -23,17 +24,16 @@ export const LoginPage: React.FC = () => {
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const handleGoogleLogin = async () => {
         setError('');
         setLoading(true);
-
         try {
-            // Add your authentication logic here
-            console.log('Login attempt:', formData);
-            // Example: await authenticateUser(formData);
+            const user = await signInWithGoogle();
+            console.log('Logged in user:', user);
+
         } catch (err) {
-            setError('Invalid email or password');
+            console.error(err);
+            setError('Google login failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -49,25 +49,8 @@ export const LoginPage: React.FC = () => {
                     </div>
                 )}
 
-                <form  className="mt-4 flex flex-col gap-3">
-                    {/* <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="h-11 px-3 border border-slate-200 rounded-md text-slate-900 placeholder-slate-400 bg-transparent outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
-                    />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        className="h-11 px-3 border border-slate-200 rounded-md text-slate-900 placeholder-slate-400 bg-transparent outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
-                    /> */}
+                <form onSubmit={handleGoogleLogin} className="mt-4 flex flex-col gap-3">
+    
                     <button
                         type="submit"
                         disabled={loading}
