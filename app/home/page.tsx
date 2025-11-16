@@ -195,7 +195,7 @@ export default function HomePage() {
             Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
           </p>
 
-          {selectedTags.length > 0 && (
+          
             <Link href="/swiping">
             <button
               className="mt-3 px-4 py-2 bg-cyan-200 text-slate-900 rounded-lg"
@@ -203,7 +203,7 @@ export default function HomePage() {
               Match with orgs!
             </button>
             </Link>
-          )}
+          
         </div>
       </div>
     </div>

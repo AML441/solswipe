@@ -8,6 +8,7 @@ import { Organization } from "@/types/organization";
 import Modal from "./modal";
 
 interface CardProps {
+  key: string;
   orgData: Organization & { id: string }; // Include id for Firestore
   liked: boolean;
   onLike:(newLiked: boolean) => void;

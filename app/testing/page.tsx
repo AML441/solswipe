@@ -70,7 +70,7 @@ export default function testing() {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
                     {savedOrgs.map((item) => (
-                        <Card key={item.id} orgData={{ ...item, id: item.id.toString() }} />
+                        <Card key={item.id} orgData={{ ...item, id: item.id.toString() }} liked={true} onLike={() => console.log("liked", true)} />
                     ))}
                 </div>
             </div>
