@@ -6,6 +6,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import bs58 from "bs58";
 import { SigninMessage } from "@/lib/SigninMessage";
 import { SparklesCore } from "@/components/sparkles";
+import Navbar from "@/components/navbar";
 
 export default function HomePage() {
   const { publicKey, signMessage, connected, wallet } = useWallet();
@@ -85,6 +86,11 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-linear-to-b from-indigo-900 to-slate-900">
+
+    <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+      <Navbar />
+    </div>
+
      <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
 
       {/* Wallet installation prompt */}

@@ -9,12 +9,12 @@ export default function Navbar() {
   return (
    < div className="bg-none">
       {/* Button to open sidebar */}
-      <div className="bg-black top-0 h-screen w-[5em]">
+      <div className="bg-transparent top-0 h-screen w-[5em] flex-col items-start">
         <button 
-          className="bg-blue-600 h-screen w-[5em] text-white rounded "
+          className="bg-transparent h-screen w-[5em] align-text-top text-white "
           onClick={() => setIsOpen(true)}
         >
-          Open Sidebar
+          Open Menu
         </button>
       </div>
 
@@ -28,21 +28,21 @@ export default function Navbar() {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-[10em] bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
+        className={`fixed top-0 left-0 h-full w-[15em] bg-slate-900 opacity-90 shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="p-4 flex justify-between items-center border-b">
-          <h2 className="text-xl text-black font-bold">Sidebar</h2>
+        <div className="p-4 flex justify-between items-center border-white border-b">
+          <h2 className="text-xl text-white font-bold">Menu</h2>
           <button
-            className="p-1 text-gray-600 hover:text-gray-900"
+            className="p-1 text-white hover:text-gray-100"
             onClick={() => setIsOpen(false)}
           >
             ✕
           </button>
         </div>
         <div className="p-4">
-         <ul className="text-black">
+         <ul className="text-white space-y-4 text-lg">
           <li><Link href="/home">Home</Link></li>
           <li><Link href="/testing">Saved Collection</Link></li>
           <li><Link href="/">Logout</Link></li>
