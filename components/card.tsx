@@ -179,8 +179,8 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
         })}
       </div>
       
-      <p className="text-2xl py-5">{description}</p>
-      <p className="text-2xl">{contact}</p>
+      <p className="text-xl py-5">{description}</p>
+      <p className="text-xl">{contact}</p>
       
       <div className="flex justify-center mt-auto">
         <button
