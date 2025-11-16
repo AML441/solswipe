@@ -12,6 +12,9 @@ import cosineSimilarity from "compute-cosine-similarity";
 import MultiSelect from "@/components/multiselect";
 import { tagTypes } from "@/types/organization";
 
+type OrgWithIndex = Organization & { originalIndex: number };
+
+
 async function generateEmbeddings() {
   const res = await fetch("/api/recommendations/embeddings");
   const data = await res.json();
@@ -20,23 +23,19 @@ async function generateEmbeddings() {
 }
 
 // Calculate similarity indices
-function getSimilarOrgs(likedIndex: number, embeddings?: number[][]): number[] {
-  if (!embeddings || embeddings.length === 0) {
-    console.warn("Embeddings not ready, returning empty similarity list");
-    return [];
-  }
-
-  const similarities: { index: number; score: number }[] = [];
+function getSimilarOrgs(originalIndex: number, embeddings: number[][]) {
+  const similarities = [];
 
   for (let i = 0; i < embeddings.length; i++) {
-    if (i === likedIndex) continue;
-    const score = cosineSimilarity(embeddings[likedIndex], embeddings[i]);
-    similarities.push({ index: i, score });
+    if (i === originalIndex) continue;
+    similarities.push({ index: i, score: cosineSimilarity(embeddings[originalIndex], embeddings[i]) });
   }
 
   similarities.sort((a, b) => b.score - a.score);
-  return similarities.map((s) => s.index);
+
+  return similarities.map(s => s.index);  // Returns ORIGINAL indexes
 }
+
 
 export default function SwipingPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -44,22 +43,28 @@ export default function SwipingPage() {
   const [isSwiping, setIsSwiping] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
   const [embeddings, setEmbeddings] = useState<number[][]>([]);
-  const [items, setItems] = useState<Organization[]>(importedItems);
+  const [items, setItems] = useState<OrgWithIndex[]>();
   const [selectedTags, setSelectedTags] = useState<tagTypes[]>([]);
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
   const [seenIds, setSeenIds] = useState<string[]>([]);
+  importedItems.map((org, index) => ({
+    ...org,
+    originalIndex: index,
+  }))
+
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeThreshold = 50;
 
   // Initialize likedMap when items load
   useEffect(() => {
-    const initialMap: Record<string, boolean> = {};
-    items.forEach((item) => {
-      initialMap[item.id] = false; // Default to not liked
-    });
-    setLikedMap(initialMap);
-  }, [items]);
+  const initialMap: Record<string, boolean> = {};
+  importedItems.forEach((item) => {
+    initialMap[item.id] = false;
+  });
+  setLikedMap(initialMap);
+}, []);
+
 
   // When rendering Card components
   useEffect(() => {
@@ -86,11 +91,17 @@ export default function SwipingPage() {
 
           // Filter using savedIds
           const filteredItems = importedItems.filter(
-            (org) => !savedIds.includes(org.id)
+            (org) => !savedIds.includes(org.id)).map((org,index) => ({
+              ...org,
+              originalIndex: index,
+            })
           );
           setItems(filteredItems);
         } else {
-          setItems(importedItems);
+          setItems(importedItems.map((org,index) => ({
+            ...org,
+            originalIndex: index,
+          })));
         }
       })
       .catch((err) => {
@@ -107,19 +118,27 @@ export default function SwipingPage() {
   }, [items]);
 
   useEffect(() => {
-    const filteredItems = importedItems.filter((org) => {
+  const filteredItems = importedItems
+    .filter((org) => {
       const matchesTag = selectedTags.length
         ? selectedTags.every((tag) => org.tags.includes(tag))
         : true;
-      const isNotSaved = !seenIds.includes(org.id);
-      return matchesTag && isNotSaved;
-    });
 
-    setItems(filteredItems);
-  }, [selectedTags, seenIds]);
+      const isNotSaved = !seenIds.includes(org.id);
+
+      return matchesTag && isNotSaved;
+    })
+    .map((org, index) => ({
+      ...org,
+      originalIndex: index,
+    }));
+
+  setItems(filteredItems);
+}, [selectedTags, seenIds]);
+
 
   // Ensure currentIndex is within bounds of items array
-  const safeCurrentIndex = Math.min(Math.max(currentIndex, 0), items.length - 1);
+  //const safeCurrentIndex = Math.min(Math.max(currentIndex, 0), items.length - 1);
 
   // Save org to Firestore
   const saveOrg = async (orgId: string) => {
@@ -141,61 +160,48 @@ export default function SwipingPage() {
     }
   };
 
-  const handleReorderingAndUpdate = (currentIndex: number) => {
-    if (!embeddings || embeddings.length === 0) {
-      console.log("Embeddings not ready, fetching...");
-      return generateEmbeddings().then((fetchedEmbeddings) => {
-        setEmbeddings(fetchedEmbeddings);
-        console.log("Embeddings dynamically fetched and set:", fetchedEmbeddings);
-        return fetchedEmbeddings;
-      }).catch((err) => {
-        console.error("Failed to fetch embeddings:", err);
-      });
-    }
+  const handleReorderingAndUpdate = async (index: number) => {
+  if (!items || items.length === 0 || !items[index]) return;
 
-    // Ensure embeddings are available
-    if (!embeddings || embeddings.length === 0) {
-      console.warn("Embeddings still not ready after fetch!");
-      return;
-    }
+  if (!embeddings || embeddings.length === 0) {
+    console.log("Embeddings not ready, fetching...");
+    const fetchedEmbeddings = await generateEmbeddings();
+    setEmbeddings(fetchedEmbeddings);
+  }
 
-    // Save the current organization
-    const currentOrgId = items[safeCurrentIndex].id;
-    saveOrg(currentOrgId);
+  const currentOrg = items[index];
+  saveOrg(currentOrg.id);
 
-    // Update seenIds (mark the item as saved)
-    setSeenIds((prev) => [...prev, currentOrgId]);
+  // Mark as seen
+  setSeenIds((prev) => [...prev, currentOrg.id]);
 
-    // Filter out the current organization from the items to avoid reordering it
-    const filteredItems = items.filter((item) => item.id !== currentOrgId);
+  // Filter out the current org
+  const filteredItems = items.filter((item) => item.id !== currentOrg.id);
 
-    // Get similar organizations based on the updated embeddings
-    const similarIndexes = getSimilarOrgs(safeCurrentIndex, embeddings);
+  // Reorder using embeddings
+  const similarOrder = getSimilarOrgs(currentOrg.originalIndex, embeddings);
 
-    // Reorder the list, excluding the current org (saved item)
-    const reordered = [
-      ...similarIndexes
-        .map(i => filteredItems[i])  // Get similar items from filtered list
-        .filter(item => item !== undefined), // Filter out undefined
-      ...filteredItems.filter((_, i) => !similarIndexes.includes(i)), // Filter out seen items
-    ];
+  const reordered: OrgWithIndex[] = [
+    ...similarOrder
+      .map((origIdx) => filteredItems.find((item) => item.originalIndex === origIdx))
+      .filter((item): item is OrgWithIndex => !!item),
+    ...filteredItems.filter((item) => !similarOrder.includes(item.originalIndex)),
+  ];
 
-    console.log("Reordered items based on similarity:", reordered);
+  // Directly set the new items and reset index safely
+  setItems(reordered);
+  setCurrentIndex(0);
+};
 
-    // Remove any undefined items after reordering
-    const cleanedReordered = reordered.filter(item => item !== undefined);
-
-    setItems(cleanedReordered);
-    setCurrentIndex(0);
-  };
 
   const handleInterested = async () => {
-    await handleReorderingAndUpdate(safeCurrentIndex);
+    await handleReorderingAndUpdate(currentIndex);
   };
 
   const handleNotInterested = () => {
-    setCurrentIndex((prev) => (prev + 1) % items.length);
-  };
+  if (!items || items.length === 0) return;
+  setCurrentIndex((prev) => (prev + 1) % items.length);
+};
 
   // Swipe helpers
   const getClientX = (e: React.TouchEvent | React.MouseEvent) =>
@@ -213,31 +219,32 @@ export default function SwipingPage() {
   };
 
   const handleSwipeEnd = async (e: React.TouchEvent | React.MouseEvent) => {
-    if (!isSwiping || !cardRef.current) return;
+  if (!isSwiping || !cardRef.current || !items || items.length === 0) return;
 
-    const moveDiff = getClientX(e) - swipeStart;
+  const moveDiff = getClientX(e) - swipeStart;
 
-    if (moveDiff > swipeThreshold) {
-      // Swipe right -> interested and save org
-      saveOrg(items[safeCurrentIndex].id);
-      await handleReorderingAndUpdate(safeCurrentIndex);
-      setCurrentIndex(0);
-    } else if (moveDiff < -swipeThreshold) {
-      // Swipe left -> not interested
-      setCurrentIndex((prev) => (prev + 1) % items.length);
-    }
+  if (moveDiff > swipeThreshold) {
+    // Swipe right -> interested
+    const currentOrg = items[currentIndex];
+    saveOrg(currentOrg.id);
+    await handleReorderingAndUpdate(currentIndex);
+  } else if (moveDiff < -swipeThreshold) {
+    // Swipe left -> not interested
+    setCurrentIndex((prev) => (items && items.length > 0 ? (prev + 1) % items.length : 0));
+  }
 
-    cardRef.current.style.transition = "transform 0.3s ease";
-    cardRef.current.style.transform = "translateX(0)";
-    setIsSwiping(false);
-  };
+  cardRef.current.style.transition = "transform 0.3s ease";
+  cardRef.current.style.transform = "translateX(0)";
+  setIsSwiping(false);
+};
+
 
     return (
     <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
       <Navbar />
       <div className="flex-1 flex flex-col items-center p-6">
         
-        <div className="w-full max-w-3xl mt-16">
+        <div className="relative w-full max-w-3xl mt-1 mb-8">
           <MultiSelect
             label="Select Your Interests"
             options={Object.values(tagTypes)}
@@ -247,7 +254,7 @@ export default function SwipingPage() {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full">
-          {items.length > 0 ? (
+          {items && items.length > 0 && items[currentIndex] ? (
             <div
               ref={cardRef}
               className="w-full max-w-md"
@@ -260,13 +267,13 @@ export default function SwipingPage() {
               onMouseLeave={handleSwipeEnd}
             >
               <Card
-                key={items[safeCurrentIndex].id}
-                orgData={items[safeCurrentIndex]}
-                liked={likedMap[items[safeCurrentIndex].id] || false}
+                key={items[currentIndex].id}
+                orgData={items[currentIndex]}
+                liked={likedMap[items[currentIndex].id] || false}
                 onLike={(newLiked) => {
                   setLikedMap((prev) => ({
                     ...prev,
-                    [items[safeCurrentIndex].id]: newLiked,
+                    [items[currentIndex].id]: newLiked,
                   }));
                 }}
                 showHeart={false}

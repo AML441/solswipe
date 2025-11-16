@@ -41,7 +41,7 @@ export default function MultiSelect<T extends string>({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute top-full left-0 right-0 z-10 bg-gray-800 border border-gray-600 rounded-lg mt-2 max-h-60 overflow-y-auto shadow-lg transition-all duration-200 ease-in-out">
+        <div className="absolute top-full left-0 right-0 z-10 bg-gray-800 border border-gray-600 rounded-lg max-h-60 overflow-y-auto shadow-lg transition-all duration-200 ease-in-out">
           {options.map((opt) => (
             <label
               key={opt}
