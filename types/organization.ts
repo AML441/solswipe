@@ -12,6 +12,7 @@ export enum tagTypes {
     }
 
 export interface Organization {
+    id: number,
     name: string,
     description: string,
     tags: tagTypes[],
