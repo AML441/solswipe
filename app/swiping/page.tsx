@@ -237,6 +237,7 @@ useEffect(() => {
   onMouseLeave={handleSwipeEnd}
 >
   <Card
+    key={items[currentIndex].id}
     orgData={items[currentIndex]}
     liked={likedMap[items[currentIndex].id] || false}
     onLike={(newLiked) => {
