@@ -50,7 +50,7 @@ export default function Saved() {
         <div className="flex-1 pl-16">
         <h1 className="text-3xl flex justify-center font-bold text-white mt-8 p-6">Your Saved Organizations</h1>
         {savedOrgs.length === 0 && (
-          <div className="flex flex-col justify-center items-center mt-20 text-xl gap-8"> {/* Center the button */}
+          <div className="flex flex-col justify-center items-center mt-20 text-xl gap-8 text-white"> {/* Center the button */}
             <p>You have no saved organizations.</p>
             <Link href="/swiping">
               <button className="text-white py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-800">
