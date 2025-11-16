@@ -9,11 +9,12 @@ import Modal from "./modal";
 
 interface CardProps {
   orgData: Organization & { id: string }; // Include id for Firestore
+  liked: boolean;
+  onLike:(newLiked: boolean) => void;
 }
 
-export default function Card({ orgData }: CardProps) {
+export default function Card({ orgData, liked, onLike }: CardProps) {
   const { id, name, description, contact } = orgData;
-  const [liked, setLiked] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -40,7 +41,7 @@ export default function Card({ orgData }: CardProps) {
     }
 
     const newLiked = !liked;
-    setLiked(newLiked);
+    onLike(newLiked);
 
     try {
       const userRef = doc(db, "users", uid);

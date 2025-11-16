@@ -5,7 +5,7 @@ import Card from "@/components/card";
 import Navbar from "@/components/navbar";
 import { Organization } from "@/types/organization";
 import { tagTypes } from "@/types/organization";
-import { arrayUnion, doc, setDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
 import { GoogleGenAI } from "@google/genai";
@@ -47,6 +47,45 @@ export default function SwipingPage() {
   const [uid, setUid] = useState<string | null>(null);
   const [embeddings, setEmbeddings] = useState<number[][]>([]);
   const [items, setItems] = useState<Organization[]>(importedItems);
+  // inside SwipingPage component
+const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+
+// Example: initializing likedMap when items load
+useEffect(() => {
+  const initialMap: Record<string, boolean> = {};
+  items.forEach((item) => {
+    initialMap[item.id] = false; // default not liked
+  });
+  setLikedMap(initialMap);
+}, [items]);
+
+// When rendering Card components
+{items.map((org, index) => (
+  <Card
+    key={org.id}            // important: unique key
+    orgData={org}
+    liked={likedMap[org.id] || false} // pass the current liked state
+    onLike={(newLiked) => {
+      setLikedMap((prev) => ({
+        ...prev,
+        [org.id]: newLiked,
+      }));
+
+      // update Firestore as before
+      const auth = getAuth();
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+
+      const userRef = doc(db, "users", uid);
+      if (newLiked) {
+        setDoc(userRef, { saved: arrayUnion(org.id) }, { merge: true });
+      } else {
+        setDoc(userRef, { saved: arrayRemove(org.id) }, { merge: true });
+      }
+    }}
+  />
+))}
+
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeThreshold = 50;
@@ -186,7 +225,41 @@ export default function SwipingPage() {
           onMouseUp={handleSwipeEnd}
           onMouseLeave={handleSwipeEnd}
         >
-          <Card orgData={items[currentIndex]} />
+          <div
+  ref={cardRef}
+  className="w-full max-w-md"
+  onTouchStart={handleSwipeStart}
+  onTouchMove={handleSwipeMove}
+  onTouchEnd={handleSwipeEnd}
+  onMouseDown={handleSwipeStart}
+  onMouseMove={handleSwipeMove}
+  onMouseUp={handleSwipeEnd}
+  onMouseLeave={handleSwipeEnd}
+>
+  <Card
+    orgData={items[currentIndex]}
+    liked={likedMap[items[currentIndex].id] || false}
+    onLike={(newLiked) => {
+      setLikedMap((prev) => ({
+        ...prev,
+        [items[currentIndex].id]: newLiked,
+      }));
+
+      // update Firestore
+      const auth = getAuth();
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+
+      const userRef = doc(db, "users", uid);
+      if (newLiked) {
+        setDoc(userRef, { saved: arrayUnion(items[currentIndex].id) }, { merge: true });
+      } else {
+        setDoc(userRef, { saved: arrayRemove(items[currentIndex].id) }, { merge: true });
+      }
+    }}
+  />
+</div>
+
         </div>
         <div className="flex gap-4 mt-4">
           <button
