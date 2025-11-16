@@ -282,13 +282,13 @@ export default function SwipingPage() {
         <div className="flex gap-4 mt-4">
           <button
             onClick={handleNotInterested}
-            className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400"
+            className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400 cursor-pointer"
           >
             Not Interested
           </button>
           <button
             onClick={handleInterested}
-            className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
+            className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 cursor-pointer"
           >
             Interested
           </button>

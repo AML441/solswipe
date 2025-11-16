@@ -176,7 +176,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
       <div className="flex justify-center mt-auto">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full rounded-[.75em] bg-cyan-200 text-slate-900 font-semibold hover:bg-teal-600 py-2"
+          className="w-full rounded-[.75em] bg-cyan-200 text-slate-900 font-semibold hover:bg-teal-600 py-2 cursor-pointer"
         >
           Make Payment
         </button>
@@ -227,7 +227,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
           <button
             onClick={handlePayment}
             disabled={!connected || isProcessing}
-            className="w-full bg-cyan-200 text-slate-900 py-2 rounded-lg hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold"
+            className="w-full bg-cyan-200 text-slate-900 py-2 rounded-lg hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold cursor-pointer"
           >
             {isProcessing ? "Simulating..." : "Simulate Payment"}
           </button>
@@ -251,7 +251,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
               setAmount("");
             }}
             disabled={isProcessing}
-            className="mt-4 w-full text-gray-500 hover:text-gray-700 disabled:text-gray-300"
+            className="mt-4 w-full text-gray-500 hover:text-gray-700 disabled:text-gray-300 cursor-pointer"
           >
             Cancel
           </button>

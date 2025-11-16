@@ -55,7 +55,7 @@ export const LoginPage = () => {
                    type="button"
                    disabled={loading}
                    onClick={handleLogin}
-                   className="mt-4 h-11 w-full rounded-md bg-cyan-200 text-slate-900 font-semibold hover:bg-teal-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                   className="mt-4 h-11 w-full rounded-md bg-cyan-200 text-slate-900 font-semibold hover:bg-teal-600 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
                >
                    {loading ? 'Logging in...' : 'Login with Google'}
                </button>
