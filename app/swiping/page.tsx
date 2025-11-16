@@ -13,14 +13,8 @@ import { db } from "@/lib/firebase";
 import { items as importedItems } from "../../types/Items";
 import { Organization, tagTypes } from "@/types/organization";
 
-// ----------------------
-// Types
-// ----------------------
 type OrgWithIndex = Organization & { originalIndex: number };
 
-// ----------------------
-// Helpers
-// ----------------------
 
 // Fetch embeddings from API
 // Calculate similarity order
@@ -39,9 +33,6 @@ function getSimilarOrgs(originalIndex: number, embeddings: number[][]) {
   return similarities.map((s) => s.index); // Return ORIGINAL indexes
 }
 
-// ----------------------
-// Component
-// ----------------------
 export default function SwipingPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeStart, setSwipeStart] = useState(0);
@@ -79,9 +70,6 @@ useEffect(() => {
     setLikedMap(initialMap);
   }, []);
 
-  // ----------------------
-  // Auth listener
-  // ----------------------
   useEffect(() => {
     const auth = getAuth();
     if (auth.currentUser) setUid(auth.currentUser.uid);
@@ -93,9 +81,6 @@ useEffect(() => {
     return () => unsubscribe();
   }, []);
 
-  // ----------------------
-  // Fetch seen IDs & filter items
-  // ----------------------
   useEffect(() => {
     if (!uid) return;
 

@@ -51,7 +51,7 @@ export default function Navbar() {
                 href="/swiping"
                 className="block hover:bg-gray-700 p-2 rounded cursor-pointer"
               >
-                Explore Orgs
+                Explore Organizations
               </Link>
             </li>
             <li>
