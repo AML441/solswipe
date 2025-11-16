@@ -7,7 +7,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
-   < div className="bg-none">
+   < div>
       {/* Button to open sidebar */}
       <div className="bg-transparent top-0 h-screen w-[5em] flex-col items-start">
         <button 
@@ -44,6 +44,7 @@ export default function Navbar() {
         <div className="p-4">
          <ul className="text-white space-y-4 text-lg">
           <li><Link href="/home">Home</Link></li>
+          <li><Link href="/swiping">Explore Orgs</Link></li>
           <li><Link href="/testing">Saved Collection</Link></li>
           <li><Link href="/">Logout</Link></li>
         </ul>
