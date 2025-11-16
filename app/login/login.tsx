@@ -42,9 +42,7 @@ export const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-linear-to-b from-indigo-900 to-slate-900">
-        <div className="min-h-screen flex items-center justify-center px-5 py-16">
-
+        <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-linear-to-b from-indigo-900 to-slate-900 overflow-hidden">
            <div className="w-full max-w-md bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-100">
                <h1 className="text-center text-2xl font-semibold text-white">Welcome to SolSwipe!</h1>
                <p className="text-center text-md text-white">SolSwipe is a web-app designed to help users learn about existing non-profits in need of funding and contribute through Solana transactions</p>
@@ -53,8 +51,6 @@ export const LoginPage = () => {
                        {error}
                    </div>
                )}
-
-
                <button
                    type="button"
                    disabled={loading}
@@ -64,8 +60,6 @@ export const LoginPage = () => {
                    {loading ? 'Logging in...' : 'Login with Google'}
                </button>
            </div>
-
-       </div>
        </div>
    );
 };
