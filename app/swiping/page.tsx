@@ -4,27 +4,19 @@ import { useState, useRef, useEffect } from "react";
 import Card from "@/components/card";
 import Navbar from "@/components/navbar";
 import { Organization } from "@/types/organization";
-import { tagTypes } from "@/types/organization";
 import { arrayRemove, arrayUnion, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
-import { GoogleGenAI } from "@google/genai";
+import { items as importedItems } from "../../types/Items"; // single source of truth
 import cosineSimilarity from "compute-cosine-similarity";
-import { items as importedItems, items } from "../../types/Items"; // single source of truth
-import { NextResponse } from "next/server";
-
-
-
-// Generate tag texts
-const tagTexts = importedItems.map((org: Organization) => org.tags.join(" "));
 
 // Dummy embedding function, replace with real API call if needed
 async function generateEmbeddings() {
   const res = await fetch("/api/recommendations/embeddings");
   const data = await res.json();
+  console.log("Embeddings fetched:", data.embeddings); // Log when embeddings are fetched
   return data.embeddings;
 }
-
 
 // Calculate similarity indices
 function getSimilarOrgs(likedIndex: number, embeddings?: number[][]): number[] {
@@ -45,7 +37,6 @@ function getSimilarOrgs(likedIndex: number, embeddings?: number[][]): number[] {
   return similarities.map((s) => s.index);
 }
 
-
 export default function SwipingPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeStart, setSwipeStart] = useState(0);
@@ -53,55 +44,21 @@ export default function SwipingPage() {
   const [uid, setUid] = useState<string | null>(null);
   const [embeddings, setEmbeddings] = useState<number[][]>([]);
   const [items, setItems] = useState<Organization[]>(importedItems);
-  // inside SwipingPage component
-const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
-
-// Example: initializing likedMap when items load
-useEffect(() => {
-  const initialMap: Record<string, boolean> = {};
-  items.forEach((item) => {
-    initialMap[item.id] = false; // default not liked
-  });
-  setLikedMap(initialMap);
-}, [items]);
-
-// When rendering Card components
-{items.map((org, index) => (
-  <Card
-    key={org.id}            // important: unique key
-    orgData={org}
-    liked={likedMap[org.id] || false} // pass the current liked state
-    onLike={(newLiked) => {
-      setLikedMap((prev) => ({
-        ...prev,
-        [org.id]: newLiked,
-      }));
-
-      // update Firestore as before
-      const auth = getAuth();
-      const uid = auth.currentUser?.uid;
-      if (!uid) return;
-
-      const userRef = doc(db, "users", uid);
-      if (newLiked) {
-        setDoc(userRef, { saved: arrayUnion(org.id) }, { merge: true });
-      } else {
-        setDoc(userRef, { saved: arrayRemove(org.id) }, { merge: true });
-      }
-    }}
-  />
-))}
-
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeThreshold = 50;
 
-  // Generate embeddings once on mount
+  // Initialize likedMap when items load
   useEffect(() => {
-    generateEmbeddings().then(setEmbeddings);
+    const initialMap: Record<string, boolean> = {};
+    items.forEach((item) => {
+      initialMap[item.id] = false; // Default to not liked
+    });
+    setLikedMap(initialMap);
   }, [items]);
 
-  // Firebase Auth listener
+  // When rendering Card components
   useEffect(() => {
     const auth = getAuth();
     if (auth.currentUser) setUid(auth.currentUser.uid);
@@ -112,6 +69,14 @@ useEffect(() => {
 
     return () => unsubscribe();
   }, []);
+
+  // Generate embeddings once on mount
+  useEffect(() => {
+    generateEmbeddings().then((data) => {
+      setEmbeddings(data);
+      console.log("Embeddings set in state:", data); // Log when embeddings are set
+    });
+  }, [items]);
 
   // Save org to Firestore
   const saveOrg = async (orgId: string) => {
@@ -134,39 +99,52 @@ useEffect(() => {
   };
 
   const handleInterested = async () => {
-  // If embeddings aren't loaded yet, fetch them
-  if (!embeddings || embeddings.length === 0) {
-    console.log("Embeddings not ready, fetching...");
-    try {
-      const fetchedEmbeddings = await generateEmbeddings();
-      setEmbeddings(fetchedEmbeddings);
-      console.log("Embeddings fetched:", fetchedEmbeddings);
-    } catch (err) {
-      console.error("Failed to fetch embeddings:", err);
-      return; // exit if fetch fails
+    // If embeddings aren't loaded yet, fetch them
+    if (!embeddings || embeddings.length === 0) {
+      console.log("Embeddings not ready, fetching...");
+      try {
+        const fetchedEmbeddings = await generateEmbeddings();
+        setEmbeddings(fetchedEmbeddings);
+        console.log("Embeddings dynamically fetched and set:", fetchedEmbeddings);
+      } catch (err) {
+        console.error("Failed to fetch embeddings:", err);
+        return; // Exit if fetch fails
+      }
+    } else {
+      console.log("Embeddings are already available:", embeddings); // Log if embeddings are available
     }
-  }
 
-  // By now embeddings should exist
-  if (!embeddings || embeddings.length === 0) {
-    console.warn("Embeddings still not ready after fetch!");
-    return;
-  }
+    // By now embeddings should exist
+    if (!embeddings || embeddings.length === 0) {
+      console.warn("Embeddings still not ready after fetch!");
+      return;
+    }
 
-  const similarIndexes = getSimilarOrgs(currentIndex, embeddings);
-  const reordered = [
-    ...similarIndexes.map(i => items[i]),
-    ...items.filter((_, i) => !similarIndexes.includes(i)),
-  ];
-  setItems(reordered);
+    // Log the initial list of items before reordering
+    console.log("Initial items before reordering:", items);
 
-  // Save the current organization
-  saveOrg(items[currentIndex].id);
+    // Save the current organization
+    saveOrg(items[currentIndex].id);
 
-  // Move to previous item
-  setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-};
+    // Get similar organizations based on the updated embeddings
+    const similarIndexes = getSimilarOrgs(currentIndex, embeddings);
 
+    const reordered = [
+      ...similarIndexes.map(i => items[i]),
+      ...items.filter((_, i) => !similarIndexes.includes(i)),
+    ];
+
+    console.log("Reordered items based on similarity:", reordered); // Log the reordered list
+
+    setItems(reordered); // Reorder the items dynamically
+
+    // Move to first item or reordered list
+    setCurrentIndex(0);
+  };
+
+  const handleNotInterested = () => {
+    setCurrentIndex((prev) => (prev + 1) % items.length);
+  };
 
   // Swipe helpers
   const getClientX = (e: React.TouchEvent | React.MouseEvent) =>
@@ -209,10 +187,6 @@ useEffect(() => {
         setCurrentIndex((prev) => (prev + 1) % items.length);
       } else if (e.key === "ArrowRight") {
         saveOrg(items[currentIndex].id);
-        setLikedMap((prev) => ({
-          ...prev,
-          [items[currentIndex].id]: true,
-        }));
         setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
       }
     };
@@ -235,92 +209,364 @@ useEffect(() => {
           onMouseUp={handleSwipeEnd}
           onMouseLeave={handleSwipeEnd}
         >
-          <div
-  ref={cardRef}
-  className="w-full max-w-md"
-  onTouchStart={handleSwipeStart}
-  onTouchMove={handleSwipeMove}
-  onTouchEnd={handleSwipeEnd}
-  onMouseDown={handleSwipeStart}
-  onMouseMove={handleSwipeMove}
-  onMouseUp={handleSwipeEnd}
-  onMouseLeave={handleSwipeEnd}
->
-  <Card
-    key={items[currentIndex].id}
-    orgData={items[currentIndex]}
-    liked={likedMap[items[currentIndex].id] || false}
-    onLike={(newLiked) => {
-      setLikedMap((prev) => ({
-        ...prev,
-        [items[currentIndex].id]: newLiked,
-      }));
+          <Card
+            key={items[currentIndex].id}
+            orgData={items[currentIndex]}
+            liked={likedMap[items[currentIndex].id] || false}
+            onLike={(newLiked) => {
+              setLikedMap((prev) => ({
+                ...prev,
+                [items[currentIndex].id]: newLiked,
+              }));
 
-      // update Firestore
-      const auth = getAuth();
-      const uid = auth.currentUser?.uid;
-      if (!uid) return;
+              // update Firestore
+              const auth = getAuth();
+              const uid = auth.currentUser?.uid;
+              if (!uid) return;
 
-      const userRef = doc(db, "users", uid);
-      if (newLiked) {
-        setDoc(userRef, { saved: arrayUnion(items[currentIndex].id) }, { merge: true });
-      } else {
-        setDoc(userRef, { saved: arrayRemove(items[currentIndex].id) }, { merge: true });
-      }
-    }}
-  />
-</div>
-
+              const userRef = doc(db, "users", uid);
+              if (newLiked) {
+                setDoc(userRef, { saved: arrayUnion(items[currentIndex].id) }, { merge: true });
+              } else {
+                setDoc(userRef, { saved: arrayRemove(items[currentIndex].id) }, { merge: true });
+              }
+            }}
+          />
         </div>
         <div className="flex gap-4 mt-4">
           <button
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % items.length)}
+            onClick={handleNotInterested}
             className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400"
           >
             Not Interested
           </button>
-  <button
-  onClick={async () => {
-    let currentEmbeddings = embeddings;
-
-    // Fetch if not ready
-    if (!currentEmbeddings || currentEmbeddings.length === 0) {
-      try {
-        currentEmbeddings = await generateEmbeddings();
-        setEmbeddings(currentEmbeddings);
-      } catch (err) {
-        console.error("Failed to fetch embeddings:", err);
-        return;
-      }
-    }
-
-    // Now we can safely calculate similarity
-    const similarIndexes = getSimilarOrgs(currentIndex, currentEmbeddings);
-
-    console.log("Similar indexes:", similarIndexes);
-    console.log("Current org:", items[currentIndex].id);
-
-    const reordered = [
-      ...similarIndexes.map(i => items[i]),
-      ...items.filter((_, i) => !similarIndexes.includes(i)),
-    ];
-    setItems(reordered);
-
-    saveOrg(items[currentIndex].id);
-    setLikedMap((prev) => ({
-          ...prev,
-          [items[currentIndex].id]: true,
-        }));
-    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-  }}
-  className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
->
-  Interested
-</button>
-
-
+          <button
+            onClick={handleInterested}
+            className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
+          >
+            Interested
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+// "use client";
+
+// import { useState, useRef, useEffect } from "react";
+// import Card from "@/components/card";
+// import Navbar from "@/components/navbar";
+// import { Organization } from "@/types/organization";
+// import { tagTypes } from "@/types/organization";
+// import { arrayRemove, arrayUnion, doc, setDoc } from "firebase/firestore";
+// import { db } from "@/lib/firebase";
+// import { getAuth } from "firebase/auth";
+// import { GoogleGenAI } from "@google/genai";
+// import cosineSimilarity from "compute-cosine-similarity";
+// import { items as importedItems, items } from "../../types/Items"; // single source of truth
+// import { NextResponse } from "next/server";
+
+
+
+// // Generate tag texts
+// const tagTexts = importedItems.map((org: Organization) => org.tags.join(" "));
+
+// // Dummy embedding function, replace with real API call if needed
+// async function generateEmbeddings() {
+//   const res = await fetch("/api/recommendations/embeddings");
+//   const data = await res.json();
+//   return data.embeddings;
+// }
+
+
+// // Calculate similarity indices
+// function getSimilarOrgs(likedIndex: number, embeddings?: number[][]): number[] {
+//   if (!embeddings || embeddings.length === 0) {
+//     console.warn("Embeddings not ready, returning empty similarity list");
+//     return [];
+//   }
+
+//   const similarities: { index: number; score: number }[] = [];
+
+//   for (let i = 0; i < embeddings.length; i++) {
+//     if (i === likedIndex) continue;
+//     const score = cosineSimilarity(embeddings[likedIndex], embeddings[i]);
+//     similarities.push({ index: i, score });
+//   }
+
+//   similarities.sort((a, b) => b.score - a.score);
+//   return similarities.map((s) => s.index);
+// }
+
+
+// export default function SwipingPage() {
+//   const [currentIndex, setCurrentIndex] = useState(0);
+//   const [swipeStart, setSwipeStart] = useState(0);
+//   const [isSwiping, setIsSwiping] = useState(false);
+//   const [uid, setUid] = useState<string | null>(null);
+//   const [embeddings, setEmbeddings] = useState<number[][]>([]);
+//   const [items, setItems] = useState<Organization[]>(importedItems);
+//   // inside SwipingPage component
+// const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+
+// // Example: initializing likedMap when items load
+// useEffect(() => {
+//   const initialMap: Record<string, boolean> = {};
+//   items.forEach((item) => {
+//     initialMap[item.id] = false; // default not liked
+//   });
+//   setLikedMap(initialMap);
+// }, [items]);
+
+// // When rendering Card components
+// {items.map((org, index) => (
+//   <Card
+//     key={org.id}            // important: unique key
+//     orgData={org}
+//     liked={likedMap[org.id] || false} // pass the current liked state
+//     onLike={(newLiked) => {
+//       setLikedMap((prev) => ({
+//         ...prev,
+//         [org.id]: newLiked,
+//       }));
+
+//       // update Firestore as before
+//       const auth = getAuth();
+//       const uid = auth.currentUser?.uid;
+//       if (!uid) return;
+
+//       const userRef = doc(db, "users", uid);
+//       if (newLiked) {
+//         setDoc(userRef, { saved: arrayUnion(org.id) }, { merge: true });
+//       } else {
+//         setDoc(userRef, { saved: arrayRemove(org.id) }, { merge: true });
+//       }
+//     }}
+//   />
+// ))}
+
+
+//   const cardRef = useRef<HTMLDivElement | null>(null);
+//   const swipeThreshold = 50;
+
+//   // Generate embeddings once on mount
+//   useEffect(() => {
+//     generateEmbeddings().then(setEmbeddings);
+//   }, [items]);
+
+//   // Firebase Auth listener
+//   useEffect(() => {
+//     const auth = getAuth();
+//     if (auth.currentUser) setUid(auth.currentUser.uid);
+
+//     const unsubscribe = auth.onAuthStateChanged(user => {
+//       setUid(user ? user.uid : null);
+//     });
+
+//     return () => unsubscribe();
+//   }, []);
+
+//   // Save org to Firestore
+//   const saveOrg = async (orgId: string) => {
+//     if (!uid) {
+//       console.error("User not logged in!");
+//       return;
+//     }
+
+//     try {
+//       const userRef = doc(db, "users", uid);
+//       await setDoc(
+//         userRef,
+//         { saved: arrayUnion(orgId) },
+//         { merge: true }
+//       );
+//       console.log("Saved org:", orgId);
+//     } catch (err) {
+//       console.error("Failed to update saved org", err);
+//     }
+//   };
+
+//   const handleInterested = async () => {
+//   // If embeddings aren't loaded yet, fetch them
+//   if (!embeddings || embeddings.length === 0) {
+//     console.log("Embeddings not ready, fetching...");
+//     try {
+//       const fetchedEmbeddings = await generateEmbeddings();
+//       setEmbeddings(fetchedEmbeddings);
+//       console.log("Embeddings fetched:", fetchedEmbeddings);
+//     } catch (err) {
+//       console.error("Failed to fetch embeddings:", err);
+//       return; // exit if fetch fails
+//     }
+//   }
+
+//   // By now embeddings should exist
+//   if (!embeddings || embeddings.length === 0) {
+//     console.warn("Embeddings still not ready after fetch!");
+//     return;
+//   }
+
+//   const similarIndexes = getSimilarOrgs(currentIndex, embeddings);
+//   const reordered = [
+//     ...similarIndexes.map(i => items[i]),
+//     ...items.filter((_, i) => !similarIndexes.includes(i)),
+//   ];
+//   setItems(reordered);
+
+//   // Save the current organization
+//   saveOrg(items[currentIndex].id);
+
+//   // Move to previous item
+//   setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+// };
+
+
+//   // Swipe helpers
+//   const getClientX = (e: React.TouchEvent | React.MouseEvent) =>
+//     "touches" in e ? e.touches[0].clientX : e.clientX;
+
+//   const handleSwipeStart = (e: React.TouchEvent | React.MouseEvent) => {
+//     setSwipeStart(getClientX(e));
+//     setIsSwiping(true);
+//   };
+
+//   const handleSwipeMove = (e: React.TouchEvent | React.MouseEvent) => {
+//     if (!isSwiping || !cardRef.current) return;
+//     const moveDiff = getClientX(e) - swipeStart;
+//     cardRef.current.style.transform = `translateX(${moveDiff}px)`;
+//   };
+
+//   const handleSwipeEnd = (e: React.TouchEvent | React.MouseEvent) => {
+//     if (!isSwiping || !cardRef.current) return;
+
+//     const moveDiff = getClientX(e) - swipeStart;
+
+//     if (moveDiff > swipeThreshold) {
+//       // Swipe right -> previous
+//       saveOrg(items[currentIndex].id);
+//       setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+//     } else if (moveDiff < -swipeThreshold) {
+//       // Swipe left -> next
+//       setCurrentIndex((prev) => (prev + 1) % items.length);
+//     }
+
+//     cardRef.current.style.transition = "transform 0.3s ease";
+//     cardRef.current.style.transform = "translateX(0)";
+//     setIsSwiping(false);
+//   };
+
+//   // Keyboard navigation
+//   useEffect(() => {
+//     const handleKeydown = (e: KeyboardEvent) => {
+//       if (e.key === "ArrowLeft") {
+//         setCurrentIndex((prev) => (prev + 1) % items.length);
+//       } else if (e.key === "ArrowRight") {
+//         saveOrg(items[currentIndex].id);
+//         setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+//       }
+//     };
+//     window.addEventListener("keydown", handleKeydown);
+//     return () => window.removeEventListener("keydown", handleKeydown);
+//   }, [currentIndex, uid, items]);
+
+//   return (
+//     <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
+//       <Navbar />
+//       <div className="flex-1 flex flex-col items-center justify-center gap-6 p-6">
+//         <div
+//           ref={cardRef}
+//           className="w-full max-w-md"
+//           onTouchStart={handleSwipeStart}
+//           onTouchMove={handleSwipeMove}
+//           onTouchEnd={handleSwipeEnd}
+//           onMouseDown={handleSwipeStart}
+//           onMouseMove={handleSwipeMove}
+//           onMouseUp={handleSwipeEnd}
+//           onMouseLeave={handleSwipeEnd}
+//         >
+//           <div
+//   ref={cardRef}
+//   className="w-full max-w-md"
+//   onTouchStart={handleSwipeStart}
+//   onTouchMove={handleSwipeMove}
+//   onTouchEnd={handleSwipeEnd}
+//   onMouseDown={handleSwipeStart}
+//   onMouseMove={handleSwipeMove}
+//   onMouseUp={handleSwipeEnd}
+//   onMouseLeave={handleSwipeEnd}
+// >
+//   <Card
+//     key={items[currentIndex].id}
+//     orgData={items[currentIndex]}
+//     liked={likedMap[items[currentIndex].id] || false}
+//     onLike={(newLiked) => {
+//       setLikedMap((prev) => ({
+//         ...prev,
+//         [items[currentIndex].id]: newLiked,
+//       }));
+
+//       // update Firestore
+//       const auth = getAuth();
+//       const uid = auth.currentUser?.uid;
+//       if (!uid) return;
+
+//       const userRef = doc(db, "users", uid);
+//       if (newLiked) {
+//         setDoc(userRef, { saved: arrayUnion(items[currentIndex].id) }, { merge: true });
+//       } else {
+//         setDoc(userRef, { saved: arrayRemove(items[currentIndex].id) }, { merge: true });
+//       }
+//     }}
+//   />
+// </div>
+
+//         </div>
+//         <div className="flex gap-4 mt-4">
+//           <button
+//             onClick={() => setCurrentIndex((prev) => (prev + 1) % items.length)}
+//             className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400"
+//           >
+//             Not Interested
+//           </button>
+//   <button
+//   onClick={async () => {
+//     let currentEmbeddings = embeddings;
+
+//     // Fetch if not ready
+//     if (!currentEmbeddings || currentEmbeddings.length === 0) {
+//       try {
+//         currentEmbeddings = await generateEmbeddings();
+//         setEmbeddings(currentEmbeddings);
+//       } catch (err) {
+//         console.error("Failed to fetch embeddings:", err);
+//         return;
+//       }
+//     }
+
+//     // Now we can safely calculate similarity
+//     const similarIndexes = getSimilarOrgs(currentIndex, currentEmbeddings);
+
+//     console.log("Similar indexes:", similarIndexes);
+//     console.log("Current org:", items[currentIndex].id);
+
+//     const reordered = [
+//       ...similarIndexes.map(i => items[i]),
+//       ...items.filter((_, i) => !similarIndexes.includes(i)),
+//     ];
+//     setItems(reordered);
+
+//     saveOrg(items[currentIndex].id);
+//     setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+//   }}
+//   className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
+// >
+//   Interested
+// </button>
+
+
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

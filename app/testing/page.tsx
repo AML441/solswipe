@@ -47,15 +47,15 @@ export default function Testing() {
       <div>
         <Navbar />
       </div>
-      <div className="flex-1">
-        <h1 className="text-3xl font-bold text-white text-center mt-8 p-6">Your Saved Organizations</h1>
+        <div className="flex-1 text-center pl-16">
+        <h1 className="text-3xl font-bold text-white mt-8 p-6">Your Saved Organizations</h1>
         {savedOrgs.length === 0 && (
-          <Link href="/swiping">
-            <button className="w-auto bg-cyan-200 text-slate-900 py-2 rounded-lg hover:bg-teal-600">
-              You have no saved organizations. Click here to explore!
-            </button>
-          </Link>
-        )}
+            <Link href="/swiping">
+                <button className="w-auto bg-cyan-200 text-slate-900 py-2 rounded-lg hover:bg-teal-600 p-4">
+                You have no saved organizations. Click here to explore!
+                </button>
+            </Link>
+            )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
           {savedOrgs.map((item) => (
             <Card
