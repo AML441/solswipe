@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Card from "@/components/card";
 import Navbar from "@/components/navbar";
 import { Organization } from "@/types/organization";
-import { arrayRemove, arrayUnion, doc, setDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
 import { items as importedItems } from "../../types/Items"; // single source of truth
@@ -45,6 +45,8 @@ export default function SwipingPage() {
   const [embeddings, setEmbeddings] = useState<number[][]>([]);
   const [items, setItems] = useState<Organization[]>(importedItems);
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+  const [seenIds, setSeenIds] = useState<string[]>([]);
+
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeThreshold = 50;
@@ -69,6 +71,33 @@ export default function SwipingPage() {
 
     return () => unsubscribe();
   }, []);
+
+ useEffect(() => {
+  if (!uid) return;
+
+  const userRef = doc(db, "users", uid);
+  getDoc(userRef)
+    .then((docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const savedIds = data.saved || [];
+        setSeenIds(savedIds);
+
+        // Filter using savedIds
+        const filteredItems = importedItems.filter(
+          (org) => !savedIds.includes(org.id)
+        );
+        setItems(filteredItems);
+      } else {
+        setItems(importedItems);
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching seenIds:", err);
+    });
+}, [uid, importedItems.length]);
+
+
 
   // Generate embeddings once on mount
   useEffect(() => {
