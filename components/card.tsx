@@ -6,19 +6,34 @@ import { useEffect, useState } from "react";
 import { FaHeart } from "react-icons/fa";
 import { Organization } from "@/types/organization";
 import Modal from "./modal";
-
 import { simulateTransaction } from "@/lib/solana";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { tagTypes } from "@/types/organization";
+import { Badge } from "@/components/badge"; // Import Badge component
 
 interface CardProps {
   key: string;
   orgData: Organization & { id: string }; // Include id for Firestore
   liked: boolean;
-  onLike:(newLiked: boolean) => void;
+  onLike: (newLiked: boolean) => void;
 }
 
+// Define a mapping from tags to color names
+const tagColorMap: { [key in tagTypes]: string } = {
+  [tagTypes.Education]: "blue",
+  [tagTypes.Health]: "red",
+  [tagTypes.Environment]: "green",
+  [tagTypes.AnimalWelfare]: "yellow",
+  [tagTypes.HumanRights]: "purple",
+  [tagTypes.Tech]: "pink",
+  [tagTypes.Media]: "indigo",
+  [tagTypes.Finance]: "gray",
+  [tagTypes.Food]: "green",
+  [tagTypes.Other]: "gray",  // Default for Other
+};
+
 export default function Card({ orgData, liked, onLike }: CardProps) {
-  const { id, name, description, contact, address } = orgData;
+  const { id, name, description, tags, contact, address } = orgData;
   const [uid, setUid] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -141,6 +156,20 @@ export default function Card({ orgData, liked, onLike }: CardProps) {
       </div>
       <p className="text-2xl py-5">{description}</p>
       <p className="text-2xl">{contact}</p>
+      {/* Display tags using Badge component */}
+     <div className="mt-4 mb-2 flex flex-wrap gap-2">
+        {tags?.map((tag: tagTypes, index: number) => {
+          // Use the tagColorMap to fetch color for the tag
+          const tagColor = tagColorMap[tag]; 
+          return (
+            <Badge
+              key={index}
+              text={tag}
+              color={tagColor}  // Use the resolved color from the map
+            />
+          );
+        })}
+      </div>
       <div className="flex justify-center mt-auto">
         <button
           onClick={() => setIsOpen(true)}
