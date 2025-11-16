@@ -94,7 +94,7 @@ export default function SwipingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-row">
+    <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
       <div>
         <Navbar />
       </div>
@@ -119,13 +119,13 @@ export default function SwipingPage() {
         <div className="flex gap-4 mt-4">
           <button
             onClick={() => setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length)} // Ensure the behavior is uniform
-            className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+            className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400"
           >
             Not Interested
           </button>
           <button
             onClick={() => setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length)} // Ensure the behavior is uniform
-            className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+            className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
           >
             Interested
           </button>

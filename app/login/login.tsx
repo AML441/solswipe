@@ -42,10 +42,11 @@ export const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-linear-to-b from-indigo-900 to-slate-900">
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+        <div className="min-h-screen gap-6 bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
+            <div>
                 <Navbar />
             </div>
+        <div className="min-h-screen flex items-center justify-center px-5 py-16">
 
            <div className="w-full max-w-md bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-100">
                <h1 className="text-center text-2xl font-semibold text-white">Welcome to SolSwipe!</h1>
@@ -67,6 +68,7 @@ export const LoginPage = () => {
                </button>
            </div>
 
+       </div>
        </div>
    );
 };

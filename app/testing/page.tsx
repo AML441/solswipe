@@ -20,7 +20,7 @@ export default function testing() {
       ];
     
       return (
-        <div className="min-h-screen bg-white flex flex-row">
+        <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
             <div>
                 <Navbar />
             </div>
