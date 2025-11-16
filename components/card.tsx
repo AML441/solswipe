@@ -152,15 +152,17 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
 
   return (
     <div className="group w-auto h-auto text-black aspect-[9/7] flex flex-col justify-start p-[2.5em] bg-white border-1 relative border-gray-200 shadow-lg rounded-[.75em]">
-      <div className="flex flex-row justify-between items-center">
-        <p className="text-4xl">{name}</p>
+      <div className="flex flex-row justify-between items-start">
+        <p className="text-4xl w-4/5">{name}</p>
         {showHeart && (
+          <div className="size-10 flex items-start justify-center">
           <FaHeart
-            className={`h-[3em] w-[3em] cursor-pointer transition-colors duration-300 ${
+            className={`size-full cursor-pointer transition-colors duration-300 ${
               liked ? "text-red-500" : "text-gray-400"
             }`}
             onClick={handleLike}
           />
+          </div>
         )}
       </div>
       
@@ -244,7 +246,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
                 ? "bg-green-50 text-green-800 border border-green-200" 
                 : paymentSuccess === false
                 ? "bg-red-50 text-red-800 border border-red-200"
-                : "bg-blue-50 text-blue-800 border border-blue-200"
+                : "bg-cyan-50 text-cyan-800 border border-cyan-200"
             }`}>
               <p className="text-sm">{paymentStatus}</p>
             </div>
