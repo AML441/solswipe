@@ -114,7 +114,10 @@ export default function HomePage() {
         <Navbar />
       </div>
 
-      <div className="w-full flex flex-col items-center justify-center h-screen gap-6 p-6">
+      <div className="w-full flex flex-col items-center justify-center h-screen gap-10 p-6">
+        <div className="text-4xl text-white font-bold">
+          Welcome to SolSwipe!
+        </div>
         <div className="w-full max-w-3xl flex flex-row items-center gap-6">
           <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
 

@@ -151,7 +151,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
   };
 
   return (
-    <div className="group w-auto h-[500px] text-black flex flex-col justify-start p-[2.5em] bg-white border-1 relative border-gray-200 shadow-lg rounded-[.75em]">
+    <div className="group w-auto h-[450px] text-black flex flex-col justify-start p-[2em] bg-white border-1 relative border-gray-200 shadow-lg rounded-[.75em]">
       <div className="flex flex-row justify-between items-start">
         <p className="text-4xl w-4/5">{name}</p>
         {showHeart && (
