@@ -7,6 +7,7 @@ import bs58 from "bs58";
 import { SigninMessage } from "@/lib/SigninMessage";
 import { getCsrfToken } from "next-auth/react";
 import Navbar from "@/components/navbar";
+import router from "next/router";
 
 export default function HomePage() {
   const { publicKey, signMessage, connected, wallet, disconnect } = useWallet();
