@@ -120,66 +120,68 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen items-center justify-center gap-6 bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
-      <div>
+    <div className="min-h-screen bg-gradient-to-b from-indigo-900 to-slate-900 flex flex-row w-full">
+      <div className="min-h-screen">
         <Navbar />
       </div>
 
-      <div>
-      <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
+      <div className="w-full flex flex-col items-center justify-center h-screen gap-6 p-6">
+        <div className="w-full max-w-3xl flex flex-row items-center gap-6">
+          <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
 
-      {/* Wallet installation prompt */}
-      {hasPhantom === false && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-yellow-800">
-            ⚠️ Phantom wallet not detected. Install from{" "}
-            <a
-              href="https://phantom.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline font-semibold"
-            >
-              phantom.app
-            </a>
-          </p>
+          {/* Wallet installation prompt */}
+          {hasPhantom === false && (
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800">
+                ⚠️ Phantom wallet not detected. Install from{" "}
+                <a
+                  href="https://phantom.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-semibold"
+                >
+                  phantom.app
+                </a>
+              </p>
+            </div>
+          )}
+
+          {/* Wallet multi-button to select a wallet */}
+          <WalletMultiButton /> {/* Always show the Solana wallet button */}
+
+          {/* Show Sign In button only if wallet is connected but not signed in */}
+          {connected && publicKey && !isSignedIn && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-sm font-mono text-blue-800">
+                  Connected: {publicKey.toBase58()}
+                </p>
+              </div>
+
+              <button
+                onClick={handleSignInWithWallet}
+                disabled={isSigningIn}
+                className="px-6 py-3 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 disabled:bg-gray-400 font-semibold"
+              >
+                {isSigningIn ? "Signing In..." : "Sign In with This Wallet"}
+              </button>
+            </div>
+          )}
+
+          {/* If connected and wallet is signed in, show the wallet address */}
+          {isSignedIn && walletAddress && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded">
+                <p className="text-sm font-mono text-green-800">
+                  Signed in to: {walletAddress}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Wallet multi-button to select a wallet */}
-      <WalletMultiButton /> {/* Always show the Solana wallet button */}
-
-      {/* Show Sign In button only if wallet is connected but not signed in */}
-      {connected && publicKey && !isSignedIn && (
-        <div className="flex flex-col items-center gap-4">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-            <p className="text-sm font-mono text-blue-800">
-              Connected: {publicKey.toBase58()}
-            </p>
-          </div>
-
-          <button
-            onClick={handleSignInWithWallet}
-            disabled={isSigningIn}
-            className="px-6 py-3 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 disabled:bg-gray-400 font-semibold"
-          >
-            {isSigningIn ? "Signing In..." : "Sign In with This Wallet"}
-          </button>
-        </div>
-      )}
-
-      {/* If connected and wallet is signed in, show the wallet address */}
-      {isSignedIn && walletAddress && (
-        <div className="flex flex-col items-center gap-4">
-          <div className="p-4 bg-green-50 border border-green-200 rounded">
-            <p className="text-sm font-mono text-green-800">
-              Signed in to: {walletAddress}
-            </p>
-          </div>
-        </div>
-      )}
-      </div>
+      
       {/* Select tagTypes */}
-      <div>
+      <div className="w-full max-w-3xl flex flex-row items-center gap-6">
         <MultiSelect<tagTypes>
           label="Select Your Interests"
           options={Object.values(tagTypes)}
@@ -189,10 +191,10 @@ export default function HomePage() {
           }}
         />
         <p className="mt-4 text-white">
-        Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
-      </p>
+          Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
+        </p>
       </div>
-
+      </div>
     </div>
   );
 }
