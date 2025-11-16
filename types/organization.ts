@@ -1,14 +1,14 @@
 export enum tagTypes {
-    Education,
-    Health,
-    Environment,
-    AnimalWelfare,
-    HumanRights,
-    Tech,
-    Media,
-    Finance,
-    Food,
-    Other
+    "Education",
+    "Health",
+    "Environment",
+    "AnimalWelfare",
+    "HumanRights",
+    "Tech",
+    "Media",
+    "Finance",
+    "Food",
+    "Other"
     }
 
 export interface Organization {

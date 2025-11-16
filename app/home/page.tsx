@@ -8,6 +8,8 @@ import { SigninMessage } from "@/lib/SigninMessage";
 import { getCsrfToken } from "next-auth/react";
 import Navbar from "@/components/navbar";
 import router from "next/router";
+import MultiSelect from "@/components/multiselect";
+import { tagTypes } from "@/types/organization";
 
 export default function HomePage() {
   const { publicKey, signMessage, connected, wallet, disconnect } = useWallet();
@@ -16,6 +18,7 @@ export default function HomePage() {
   const [hasPhantom, setHasPhantom] = useState<boolean | null>(null);
   const [isSignedIn, setIsSignedIn] = useState<boolean>(false); // Track sign-in state
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<tagTypes[]>([]);
 
   // Check for Phantom wallet
   useEffect(() => {
@@ -121,6 +124,8 @@ export default function HomePage() {
       <div>
         <Navbar />
       </div>
+
+      <div>
       <h1 className="text-2xl text-white font-bold">Connect Your Wallet</h1>
 
       {/* Wallet installation prompt */}
@@ -172,6 +177,22 @@ export default function HomePage() {
           </div>
         </div>
       )}
+      </div>
+      {/* Select tagTypes */}
+      <div>
+        <MultiSelect<tagTypes>
+          label="Select Your Interests"
+          options={Object.values(tagTypes)}
+          selected={selectedTags}
+          onChange={(values) => {
+            setSelectedTags(values);
+          }}
+        />
+        <p className="mt-4 text-white">
+        Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
+      </p>
+      </div>
+
     </div>
   );
 }
