@@ -27,8 +27,8 @@ const tagColorMap: { [key in tagTypes]: string } = {
   [tagTypes.HumanRights]: "purple",
   [tagTypes.Tech]: "pink",
   [tagTypes.Media]: "indigo",
-  [tagTypes.Finance]: "gray",
-  [tagTypes.Food]: "green",
+  [tagTypes.Finance]: "orange",
+  [tagTypes.Food]: "white",
   [tagTypes.Other]: "gray",  // Default for Other
 };
 

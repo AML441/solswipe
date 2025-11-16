@@ -209,6 +209,10 @@ useEffect(() => {
         setCurrentIndex((prev) => (prev + 1) % items.length);
       } else if (e.key === "ArrowRight") {
         saveOrg(items[currentIndex].id);
+        setLikedMap((prev) => ({
+          ...prev,
+          [items[currentIndex].id]: true,
+        }));
         setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
       }
     };
@@ -303,6 +307,10 @@ useEffect(() => {
     setItems(reordered);
 
     saveOrg(items[currentIndex].id);
+    setLikedMap((prev) => ({
+          ...prev,
+          [items[currentIndex].id]: true,
+        }));
     setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
   }}
   className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
