@@ -114,6 +114,7 @@ export default function SwipingPage() {
             org={items[currentIndex].name}
             desc={items[currentIndex].description}
             contact={items[currentIndex].contact}
+            address={"3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9"}
           />
         </div>
         <div className="flex gap-4 mt-4">

@@ -27,7 +27,7 @@ export default function testing() {
             <div className="flex-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
                 {items.map((item, i) => (
-                    <Card key={i} org={item.name} desc={item.description} contact={item.contact} />
+                    <Card key={i} org={item.name} desc={item.description} contact={item.contact} address={"3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9"} />
                 ))}
                 </div>
             </div>
