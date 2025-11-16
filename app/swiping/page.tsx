@@ -5,6 +5,9 @@ import Card from "@/components/card";
 import Navbar from "@/components/navbar";
 import { Organization } from "@/types/organization";
 import { tagTypes } from "@/types/organization";
+import { arrayRemove, arrayUnion, doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default function SwipingPage() {
   const items: Organization[] = [
@@ -24,6 +27,8 @@ export default function SwipingPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeStart, setSwipeStart] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [uid, setUid] = useState<string | null>(null); 
+  const [liked, setLiked] = useState(false);
 
   const swipeThreshold = 50; // Minimum swipe distance to trigger the swipe action
   const cardRef = useRef<HTMLDivElement | null>(null); // Ref for the card container
@@ -34,6 +39,40 @@ export default function SwipingPage() {
       return e.touches[0].clientX; // Access clientX from the touch object
     } else {
       return e.clientX; // Access clientX from MouseEvent
+    }
+  };
+
+   useEffect(() => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) setUid(user.uid);
+  
+      // Optional: listen for changes
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user) setUid(user.uid);
+        else setUid(null);
+      });
+  
+      return () => unsubscribe();
+    }, []);
+      
+  
+    const saveOrg = async (orgId: string) => {
+    if (!uid) {
+      console.error("User not logged in!");
+      return;
+    }
+  
+    try {
+      const userRef = doc(db, "users", uid);
+      await setDoc(
+          userRef,
+          { saved: arrayUnion(orgId) },
+          { merge: true }
+          );
+           console.log("Saved org:", orgId);
+    } catch (err) {
+      console.error("Failed to update saved org", err);
     }
   };
 
@@ -51,6 +90,7 @@ export default function SwipingPage() {
 
     if (moveDiff > swipeThreshold) {
       setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length); // Swipe right to go to the previous card
+      saveOrg(items[currentIndex].id);
     } else if (moveDiff < -swipeThreshold) {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length); // Swipe left to go to the next card
     }
@@ -80,7 +120,11 @@ export default function SwipingPage() {
       if (e.key === "ArrowLeft") {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length); // Arrow left -> Next card
       } else if (e.key === "ArrowRight") {
-        setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length); // Arrow right -> Previous card
+        setCurrentIndex((prevIndex) => {
+           const currId = items[currentIndex].id;   // correct ID
+            saveOrg(currId);                      // save immediately
+            return (prevIndex - 1 + items.length) % items.length;
+        });
       }
     };
 
@@ -91,7 +135,7 @@ export default function SwipingPage() {
     return () => {
       window.removeEventListener("keydown", handleKeydown);
     };
-  }, []);
+  }, [currentIndex, uid]);
 
   return (
     <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
@@ -122,7 +166,7 @@ export default function SwipingPage() {
             Not Interested
           </button>
           <button
-            onClick={() => setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length)} // Ensure the behavior is uniform
+            onClick={() => {saveOrg(items[currentIndex].id);    setCurrentIndex((prevIndex) => (prevIndex - 1 + items.length) % items.length) }} // Ensure the behavior is uniform
             className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600"
           >
             Interested
