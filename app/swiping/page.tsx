@@ -1,83 +1,94 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Card from "@/components/card";
-import Navbar from "@/components/navbar";
-import { Organization } from "@/types/organization";
-import { arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
-import { items as importedItems } from "../../types/Items";
+import { doc, getDoc, setDoc, arrayUnion } from "firebase/firestore";
 import cosineSimilarity from "compute-cosine-similarity";
-import MultiSelect from "@/components/multiselect";
-import { tagTypes } from "@/types/organization";
 
+
+import Navbar from "@/components/navbar";
+import Card from "@/components/card";
+import MultiSelect from "@/components/multiselect";
+import { db } from "@/lib/firebase";
+import { items as importedItems } from "../../types/Items";
+import { Organization, tagTypes } from "@/types/organization";
+
+// ----------------------
+// Types
+// ----------------------
 type OrgWithIndex = Organization & { originalIndex: number };
 
+// ----------------------
+// Helpers
+// ----------------------
 
-async function generateEmbeddings() {
-  const res = await fetch("/api/recommendations/embeddings");
-  const data = await res.json();
-  console.log("Embeddings fetched:", data.embeddings); // Log when embeddings are fetched
-  return data.embeddings;
-}
-
-// Calculate similarity indices
+// Fetch embeddings from API
+// Calculate similarity order
 function getSimilarOrgs(originalIndex: number, embeddings: number[][]) {
-  const similarities = [];
+  const similarities: { index: number; score: number }[] = [];
 
   for (let i = 0; i < embeddings.length; i++) {
     if (i === originalIndex) continue;
-    similarities.push({ index: i, score: cosineSimilarity(embeddings[originalIndex], embeddings[i]) });
+    similarities.push({
+      index: i,
+      score: cosineSimilarity(embeddings[originalIndex], embeddings[i]),
+    });
   }
 
   similarities.sort((a, b) => b.score - a.score);
-
-  return similarities.map(s => s.index);  // Returns ORIGINAL indexes
+  return similarities.map((s) => s.index); // Return ORIGINAL indexes
 }
 
-
+// ----------------------
+// Component
+// ----------------------
 export default function SwipingPage() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [swipeStart, setSwipeStart] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const [uid, setUid] = useState<string | null>(null);
-  const [embeddings, setEmbeddings] = useState<number[][]>([]);
-  const [items, setItems] = useState<OrgWithIndex[]>();
-  const [selectedTags, setSelectedTags] = useState<tagTypes[]>([]);
-  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
-  const [seenIds, setSeenIds] = useState<string[]>([]);
-  importedItems.map((org, index) => ({
-    ...org,
-    originalIndex: index,
-  }))
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [swipeStart, setSwipeStart] = useState(0);
+    const [isSwiping, setIsSwiping] = useState(false);
+    const [uid, setUid] = useState<string | null>(null);
+    const [embeddings, setEmbeddings] = useState<number[][]>([]);
+    const [items, setItems] = useState<OrgWithIndex[]>([]);
+    const [selectedTags, setSelectedTags] = useState<tagTypes[]>([]);
+    const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+    const [seenIds, setSeenIds] = useState<string[]>([]);
+    const [embeddingsReady, setEmbeddingsReady] = useState(false);
+  // ----------------------
+  // State
+  // ----------------------
 
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeThreshold = 50;
 
-  // Initialize likedMap when items load
+  // ----------------------
+  // Initialize likedMap
+  // ----------------------
   useEffect(() => {
-  const initialMap: Record<string, boolean> = {};
-  importedItems.forEach((item) => {
-    initialMap[item.id] = false;
-  });
-  setLikedMap(initialMap);
-}, []);
+    const initialMap: Record<string, boolean> = {};
+    importedItems.forEach((item) => {
+      initialMap[item.id] = false;
+    });
+    setLikedMap(initialMap);
+  }, []);
 
-
-  // When rendering Card components
+  // ----------------------
+  // Auth listener
+  // ----------------------
   useEffect(() => {
     const auth = getAuth();
     if (auth.currentUser) setUid(auth.currentUser.uid);
 
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       setUid(user ? user.uid : null);
     });
 
     return () => unsubscribe();
   }, []);
 
+  // ----------------------
+  // Fetch seen IDs & filter items
+  // ----------------------
   useEffect(() => {
     if (!uid) return;
 
@@ -86,61 +97,57 @@ export default function SwipingPage() {
       .then((docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const savedIds = data.saved || [];
+          const savedIds: string[] = data.saved || [];
           setSeenIds(savedIds);
 
-          // Filter using savedIds
-          const filteredItems = importedItems.filter(
-            (org) => !savedIds.includes(org.id)).map((org,index) => ({
-              ...org,
-              originalIndex: index,
-            })
-          );
+          const filteredItems = importedItems
+            .filter((org) => !savedIds.includes(org.id))
+            .map((org, index) => ({ ...org, originalIndex: index }));
+
           setItems(filteredItems);
         } else {
-          setItems(importedItems.map((org,index) => ({
-            ...org,
-            originalIndex: index,
-          })));
+          setItems(
+            importedItems.map((org, index) => ({
+              ...org,
+              originalIndex: index,
+            }))
+          );
         }
       })
-      .catch((err) => {
-        console.error("Error fetching seenIds:", err);
-      });
-  }, [uid, importedItems.length]);
+      .catch((err) => console.error("Error fetching seenIds:", err));
+  }, [uid]);
 
-  // Generate embeddings once on mount
+  // ----------------------
+  // Fetch embeddings
+  // ----------------------
   useEffect(() => {
     generateEmbeddings().then((data) => {
       setEmbeddings(data);
-      console.log("Embeddings set in state:", data); // Log when embeddings are set
+      console.log("Embeddings set in state:", data);
     });
-  }, [items]);
+  }, []);
 
+  // ----------------------
+  // Filter items by selected tags
+  // ----------------------
   useEffect(() => {
-  const filteredItems = importedItems
-    .filter((org) => {
-      const matchesTag = selectedTags.length
-        ? selectedTags.every((tag) => org.tags.includes(tag))
-        : true;
+    const filteredItems = importedItems
+      .filter((org) => {
+        const matchesTag = selectedTags.length
+          ? selectedTags.every((tag) => org.tags.includes(tag))
+          : true;
 
-      const isNotSaved = !seenIds.includes(org.id);
+        const isNotSaved = !seenIds.includes(org.id);
+        return matchesTag && isNotSaved;
+      })
+      .map((org, index) => ({ ...org, originalIndex: index }));
 
-      return matchesTag && isNotSaved;
-    })
-    .map((org, index) => ({
-      ...org,
-      originalIndex: index,
-    }));
+    setItems(filteredItems);
+  }, [selectedTags, seenIds]);
 
-  setItems(filteredItems);
-}, [selectedTags, seenIds]);
-
-
-  // Ensure currentIndex is within bounds of items array
-  //const safeCurrentIndex = Math.min(Math.max(currentIndex, 0), items.length - 1);
-
-  // Save org to Firestore
+  // ----------------------
+  // Firestore save
+  // ----------------------
   const saveOrg = async (orgId: string) => {
     if (!uid) {
       console.error("User not logged in!");
@@ -149,37 +156,84 @@ export default function SwipingPage() {
 
     try {
       const userRef = doc(db, "users", uid);
-      await setDoc(
-        userRef,
-        { saved: arrayUnion(orgId) },
-        { merge: true }
-      );
+      await setDoc(userRef, { saved: arrayUnion(orgId) }, { merge: true });
       console.log("Saved org:", orgId);
     } catch (err) {
       console.error("Failed to update saved org", err);
     }
   };
 
-  const handleReorderingAndUpdate = async (index: number) => {
-  if (!items || items.length === 0 || !items[index]) return;
+  // ----------------------
+  // Handle reordering after interest
+  // ----------------------
+ // Inside SwipingPage component
 
-  if (!embeddings || embeddings.length === 0) {
-    console.log("Embeddings not ready, fetching...");
-    const fetchedEmbeddings = await generateEmbeddings();
-    setEmbeddings(fetchedEmbeddings);
+
+// Declare useRef at the top of the component
+const embeddingsPromiseRef = useRef<Promise<number[][]> | null>(null);  // Reference to store the embeddings fetch promise
+
+// Function to generate embeddings
+const generateEmbeddings = async (): Promise<number[][]> => {
+  // If embeddings are ready, just return them
+  if (embeddingsReady && embeddings.length > 0) {
+    return embeddings;
   }
 
-  const currentOrg = items[index];
-  saveOrg(currentOrg.id);
+  // If there’s already a promise, just return it to avoid duplicate fetches
+  if (embeddingsPromiseRef.current) {
+    return embeddingsPromiseRef.current;
+  }
 
-  // Mark as seen
+  // Start fetching the embeddings
+  embeddingsPromiseRef.current = fetch("/api/recommendations/embeddings")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.embeddings && data.embeddings.length > 0) {
+        setEmbeddings(data.embeddings);  // Update the embeddings state
+        setEmbeddingsReady(true);        // Mark embeddings as ready
+        embeddingsPromiseRef.current = null;  // Clear the promise ref after completion
+      } else {
+        setEmbeddingsReady(false);  // In case the response is empty
+      }
+      return data.embeddings;  // Return the embeddings from the API
+    })
+    .catch((err) => {
+      console.error("Failed to fetch embeddings", err);
+      embeddingsPromiseRef.current = null;  // Clear the promise ref in case of error
+      setEmbeddingsReady(false);  // Mark embeddings as not ready if the fetch fails
+      return [];
+    });
+
+  // Return the promise to avoid re-fetching during the same lifecycle
+  return embeddingsPromiseRef.current;
+};
+
+
+
+
+const handleReorderingAndUpdate = async (index: number) => {
+  if (!items || !items[index]) return;
+
+  const currentOrg = items[index];
+  await saveOrg(currentOrg.id);
   setSeenIds((prev) => [...prev, currentOrg.id]);
 
-  // Filter out the current org
+  // Ensure embeddings are ready
+  let embs = embeddings;
+  if (!embeddingsReady || !embs || embs.length === 0) {
+    embs = await generateEmbeddings(); // make sure it returns an array
+  }
+
+  if (!embs || embs.length === 0) {
+    console.error("Embeddings not ready or empty, cannot reorder");
+    setItems(items.filter((item, idx) => idx !== index));
+    setCurrentIndex(0);
+    return;
+  }
+
   const filteredItems = items.filter((item) => item.id !== currentOrg.id);
 
-  // Reorder using embeddings
-  const similarOrder = getSimilarOrgs(currentOrg.originalIndex, embeddings);
+  const similarOrder = getSimilarOrgs(currentOrg.originalIndex, embs); // safe now
 
   const reordered: OrgWithIndex[] = [
     ...similarOrder
@@ -188,22 +242,28 @@ export default function SwipingPage() {
     ...filteredItems.filter((item) => !similarOrder.includes(item.originalIndex)),
   ];
 
-  // Directly set the new items and reset index safely
   setItems(reordered);
   setCurrentIndex(0);
 };
 
 
+
+
+  // ----------------------
+  // Button handlers
+  // ----------------------
   const handleInterested = async () => {
     await handleReorderingAndUpdate(currentIndex);
   };
 
   const handleNotInterested = () => {
-  if (!items || items.length === 0) return;
-  setCurrentIndex((prev) => (prev + 1) % items.length);
-};
+    if (!items || items.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % items.length);
+  };
 
-  // Swipe helpers
+  // ----------------------
+  // Swipe handlers
+  // ----------------------
   const getClientX = (e: React.TouchEvent | React.MouseEvent) =>
     "touches" in e ? e.touches[0].clientX : e.clientX;
 
@@ -219,31 +279,28 @@ export default function SwipingPage() {
   };
 
   const handleSwipeEnd = async (e: React.TouchEvent | React.MouseEvent) => {
-  if (!isSwiping || !cardRef.current || !items || items.length === 0) return;
+    if (!isSwiping || !cardRef.current || !items || items.length === 0) return;
 
-  const moveDiff = getClientX(e) - swipeStart;
+    const moveDiff = getClientX(e) - swipeStart;
 
-  if (moveDiff > swipeThreshold) {
-    // Swipe right -> interested
-    const currentOrg = items[currentIndex];
-    saveOrg(currentOrg.id);
-    await handleReorderingAndUpdate(currentIndex);
-  } else if (moveDiff < -swipeThreshold) {
-    // Swipe left -> not interested
-    setCurrentIndex((prev) => (items && items.length > 0 ? (prev + 1) % items.length : 0));
-  }
+    if (moveDiff > swipeThreshold) {
+      await handleReorderingAndUpdate(currentIndex);
+    } else if (moveDiff < -swipeThreshold) {
+      setCurrentIndex((prev) => (items && items.length > 0 ? (prev + 1) % items.length : 0));
+    }
 
-  cardRef.current.style.transition = "transform 0.3s ease";
-  cardRef.current.style.transform = "translateX(0)";
-  setIsSwiping(false);
-};
+    cardRef.current.style.transition = "transform 0.3s ease";
+    cardRef.current.style.transform = "translateX(0)";
+    setIsSwiping(false);
+  };
 
-
-    return (
+  // ----------------------
+  // Render
+  // ----------------------
+  return (
     <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
       <Navbar />
       <div className="flex-1 flex flex-col items-center p-6">
-        
         <div className="relative w-full max-w-3xl mt-1 mb-8">
           <MultiSelect
             label="Select Your Interests"
@@ -291,11 +348,16 @@ export default function SwipingPage() {
               Not Interested
             </button>
             <button
-              onClick={handleInterested}
-              className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 cursor-pointer"
-            >
-              Interested
-            </button>
+  onClick={handleInterested}
+  disabled={!embeddingsReady || !(embeddings?.length > 0)}
+  className={`px-4 py-2 rounded cursor-pointer ${
+    !embeddingsReady ? 'bg-gray-500 text-gray-300' : 'bg-cyan-200 text-slate-900 hover:bg-teal-600'
+  }`}
+>
+  Interested
+</button>
+
+
           </div>
         </div>
       </div>
