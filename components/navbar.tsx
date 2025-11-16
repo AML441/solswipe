@@ -58,7 +58,7 @@ export default function Navbar() {
             </li>
             <li>
               <Link
-                href="/testing"
+                href="/saved"
                 className="block hover:bg-gray-700 p-2 rounded cursor-pointer"
               >
                 Saved Collection

@@ -16,6 +16,7 @@ interface CardProps {
   orgData: Organization & { id: string }; // Include id for Firestore
   liked: boolean;
   onLike: (newLiked: boolean) => void;
+  showHeart: boolean;
 }
 
 // Define a mapping from tags to color names
@@ -32,7 +33,7 @@ const tagColorMap: { [key in tagTypes]: string } = {
   [tagTypes.Other]: "gray",  // Default for Other
 };
 
-export default function Card({ orgData, liked, onLike }: CardProps) {
+export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
   const { id, name, description, tags, contact, address } = orgData;
   const [uid, setUid] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -147,12 +148,14 @@ export default function Card({ orgData, liked, onLike }: CardProps) {
     <div className="group w-auto h-auto text-black aspect-[9/7] flex flex-col justify-start p-[2.5em] bg-white border-1 relative border-gray-200 shadow-lg rounded-[.75em]">
       <div className="flex flex-row justify-between items-center">
         <p className="text-4xl">{name}</p>
-        <FaHeart
-          className={`h-[3em] w-[3em] cursor-pointer transition-colors duration-300 ${
-            liked ? "text-red-500" : "text-gray-400"
-          }`}
-          onClick={handleLike}
-        />
+        {showHeart && (  // Conditionally render the heart based on showHeart prop
+          <FaHeart
+            className={`h-[3em] w-[3em] cursor-pointer transition-colors duration-300 ${
+              liked ? "text-red-500" : "text-gray-400"
+            }`}
+            onClick={handleLike}
+          />
+        )}
       </div>
       <p className="text-2xl py-5">{description}</p>
       <p className="text-2xl">{contact}</p>

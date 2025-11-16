@@ -276,6 +276,7 @@ export default function SwipingPage() {
                 setDoc(userRef, { saved: arrayRemove(items[currentIndex].id) }, { merge: true });
               }
             }}
+            showHeart={false}
           />
         </div>
         <div className="flex gap-4 mt-4">
