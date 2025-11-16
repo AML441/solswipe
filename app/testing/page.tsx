@@ -4,8 +4,7 @@ import Navbar from "@/components/navbar";
 import LayoutWithSidebar from "@/components/navbar";
 import { tagTypes } from "@/types/organization";
 
-export default function testing() {
-    const items: Organization[] = [
+ export const items: Organization[] = [
         { id: "1", name: "BrightFuture Scholars", description: "Provides scholarships, mentorship, and tutoring programs to low-income high school students pursuing STEM fields.", tags: [tagTypes.Education], contact: "contact@brightfuturescholars.org", address: "3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9" },
         { id: "2", name: "Clean Earth Initiative", description: "Focuses on environmental conservation through community clean-ups, recycling education, and sustainability advocacy.", tags: [tagTypes.Environment], contact: "info@cleanearthinitiative.org", address: "3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9" },
         { id: "3", name: "Hearts & Homes Animal Rescue", description: "Rescues abandoned or injured animals, offers medical care, and facilitates adoption into loving families.", tags: [tagTypes.AnimalWelfare, tagTypes.Health], contact: "support@heartandhomes.org", address: "3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9" },
@@ -18,7 +17,8 @@ export default function testing() {
         { id: "10", name: "World Literacy Bridge", description: "Promotes global literacy through book drives, mobile libraries, and volunteer teaching programs.", tags: [tagTypes.Education], contact: "contact@worldliteracybridge.org", address: "3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9" },
         { id: "11", name: "Mindful Minds Foundation", description: "Promotes mental health awareness by offering free workshops, peer support groups, and school outreach programs.", tags: [tagTypes.Health,tagTypes.Media], contact: "info@mmf.com", address: "3Ypzjvg3V3THNeHhdeKPLQfpfyUKGYYyB8GVddWLCzF9" },
       ];
-      
+
+export default function testing() {
     
       return (
         <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
