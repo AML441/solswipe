@@ -10,6 +10,7 @@ import Navbar from "@/components/navbar";
 import router from "next/router";
 import MultiSelect from "@/components/multiselect";
 import { tagTypes } from "@/types/organization";
+import Link from "next/link";
 
 export default function HomePage() {
   const { publicKey, signMessage, connected, wallet, disconnect } = useWallet();
@@ -179,21 +180,31 @@ export default function HomePage() {
             </div>
           )}
         </div>
-      
-      {/* Select tagTypes */}
-      <div className="w-full max-w-3xl flex flex-row items-center gap-6">
-        <MultiSelect<tagTypes>
-          label="Select Your Interests"
-          options={Object.values(tagTypes)}
-          selected={selectedTags}
-          onChange={(values) => {
-            setSelectedTags(values);
-          }}
-        />
-        <p className="mt-4 text-white">
-          Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
-        </p>
-      </div>
+
+        {/* Select tagTypes */}
+        <div className="w-full max-w-3xl flex flex-row items-center gap-6">
+          <MultiSelect<tagTypes>
+            label="Select Your Interests"
+            options={Object.values(tagTypes)}
+            selected={selectedTags}
+            onChange={(values) => {
+              setSelectedTags(values);
+            }}
+          />
+          <p className="mt-4 text-white">
+            Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
+          </p>
+
+          {selectedTags.length > 0 && (
+            <Link href="/swiping">
+            <button
+              className="mt-3 px-4 py-2 bg-cyan-200 text-slate-900 rounded-lg"
+            >
+              Match with orgs!
+            </button>
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );
