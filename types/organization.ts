@@ -15,5 +15,6 @@ export interface Organization {
     name: string,
     description: string,
     tags: tagTypes[],
-    contact: string
+    contact: string,
+    address: string
 }
