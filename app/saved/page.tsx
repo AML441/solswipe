@@ -11,7 +11,7 @@ import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import { items } from "../../types/Items";
 
-export default function Testing() {
+export default function Saved() {
   const [uid, setUid] = useState<string | null>(null);
   const [savedOrgIds, setSavedOrgIds] = useState<string[]>([]);
 
@@ -47,15 +47,19 @@ export default function Testing() {
       <div>
         <Navbar />
       </div>
-        <div className="flex-1 text-center pl-16">
-        <h1 className="text-3xl font-bold text-white mt-8 p-6">Your Saved Organizations</h1>
+        <div className="flex-1 pl-16">
+        <h1 className="text-3xl flex justify-center font-bold text-white mt-8 p-6">Your Saved Organizations</h1>
         {savedOrgs.length === 0 && (
+          <div className="flex flex-col justify-center items-center mt-20 text-xl gap-8"> {/* Center the button */}
+            <p>You have no saved organizations.</p>
             <Link href="/swiping">
-                <button className="w-auto bg-cyan-200 text-slate-900 py-2 rounded-lg hover:bg-teal-600 p-4">
-                You have no saved organizations. Click here to explore!
-                </button>
+              <button className="text-white py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-800">
+                Explore organizations!
+              </button>
             </Link>
-            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
           {savedOrgs.map((item) => (
             <Card

@@ -157,9 +157,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
           />
         )}
       </div>
-      <p className="text-2xl py-5">{description}</p>
-      <p className="text-2xl">{contact}</p>
-      {/* Display tags using Badge component */}
+       {/* Display tags using Badge component */}
      <div className="mt-4 mb-2 flex flex-wrap gap-2">
         {tags?.map((tag: tagTypes, index: number) => {
           // Use the tagColorMap to fetch color for the tag
@@ -173,6 +171,8 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
           );
         })}
       </div>
+      <p className="text-2xl py-5">{description}</p>
+      <p className="text-2xl">{contact}</p>
       <div className="flex justify-center mt-auto">
         <button
           onClick={() => setIsOpen(true)}
