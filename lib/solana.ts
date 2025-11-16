@@ -1,4 +1,3 @@
-// lib/solana.ts
 import { 
   Connection, 
   PublicKey, 

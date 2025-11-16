@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FaBars } from "react-icons/fa"; // Import hamburger icon from react-icons
+import { FaBars } from "react-icons/fa";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div>
-      {/* Fixed Navbar with background color */}
       <div className="fixed top-0 left-0 h-full w-16 bg-slate-900 text-white shadow-lg z-50 flex items-start px-4">
-        {/* Hamburger Icon */}
         <button
           className="text-white text-3xl cursor-pointer mt-4"
           onClick={() => setIsOpen(true)} // Open sidebar

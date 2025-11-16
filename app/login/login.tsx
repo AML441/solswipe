@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { signInWithGoogle } from '@/lib/services/auth';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/navbar';
 
 export const LoginPage = () => {
     const [loading, setLoading] = useState(false);

@@ -3,23 +3,18 @@
 import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import bs58 from "bs58";
 import { SigninMessage } from "@/lib/SigninMessage";
 import { getCsrfToken } from "next-auth/react";
 import Navbar from "@/components/navbar";
-import router from "next/router";
-import MultiSelect from "@/components/multiselect";
 import { tagTypes } from "@/types/organization";
-import Link from "next/link";
 
 export default function HomePage() {
-  const { publicKey, signMessage, connected, wallet, disconnect } = useWallet();
+  const { publicKey, signMessage, connected } = useWallet();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
   const [hasPhantom, setHasPhantom] = useState<boolean | null>(null);
   const [isSignedIn, setIsSignedIn] = useState<boolean>(false); // Track sign-in state
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [selectedTags, setSelectedTags] = useState<tagTypes[]>([]);
 
   // Check for Phantom wallet
   useEffect(() => {
@@ -45,14 +40,13 @@ export default function HomePage() {
   // Watch for changes in wallet connection status
   useEffect(() => {
     if (!connected) {
-      setIsSignedIn(false); // Reset sign-in state
-      setWalletAddress(null); // Reset wallet address
-      localStorage.removeItem("isSignedIn"); // Clear localStorage
-      localStorage.removeItem("walletAddress"); // Clear wallet address in localStorage
+      setIsSignedIn(false);
+      setWalletAddress(null);
+      localStorage.removeItem("isSignedIn");
+      localStorage.removeItem("walletAddress");
     }
-  }, [connected]); // This runs whenever `connected` state changes
+  }, [connected]);
 
-  // Handle sign-in with wallet
   const handleSignInWithWallet = async () => {
     if (!publicKey || !signMessage) {
       alert("Connect your wallet first!");
@@ -67,7 +61,7 @@ export default function HomePage() {
     try {
       setIsSigningIn(true);
       const address = publicKey.toBase58();
-      setWalletAddress(address); // Store the wallet address
+      setWalletAddress(address);
       const csrf = await getCsrfToken();
 
       if (!csrf) {
@@ -76,8 +70,6 @@ export default function HomePage() {
         return;
       }
 
-      // Prepare message to sign
-      // const csrf = crypto.randomUUID(); // simple nonce if you don't have CSRF token
       const message = new SigninMessage({
         domain: window.location.host,
         publicKey: address,
@@ -87,9 +79,6 @@ export default function HomePage() {
 
       const data = new TextEncoder().encode(message.prepare());
       const signature = await signMessage(data);
-
-      // Optional: send signature to backend if needed
-      // await fetch("/api/verify-wallet-signature", { ... });
 
       // Save wallet to Firestore under existing user document
       const res = await fetch("/api/wallet/add", {
@@ -104,7 +93,7 @@ export default function HomePage() {
         return;
       }
 
-      alert("✅ Wallet added to your account: " + address);
+      // alert("Wallet added to your account: " + address);
       setIsSignedIn(true); // Set the user as signed in
 
       // Store sign-in state and wallet address in localStorage
@@ -133,7 +122,7 @@ export default function HomePage() {
           {hasPhantom === false && (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
               <p className="text-yellow-800">
-                ⚠️ Phantom wallet not detected. Install from{" "}
+                Phantom wallet not detected. Install from{" "}
                 <a
                   href="https://phantom.app/"
                   target="_blank"
@@ -147,7 +136,7 @@ export default function HomePage() {
           )}
 
           {/* Wallet multi-button to select a wallet */}
-          <WalletMultiButton /> {/* Always show the Solana wallet button */}
+          <WalletMultiButton />
 
           {/* Show Sign In button only if wallet is connected but not signed in */}
           {connected && publicKey && !isSignedIn && (

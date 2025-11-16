@@ -13,7 +13,6 @@ export default function AmountModalExample({addr}: PaymentModalProps) {
 
   return (
     <div className="p-6">
-      {/* Button to Open Modal */}
       <button
         onClick={() => setIsOpen(true)}
         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -21,7 +20,6 @@ export default function AmountModalExample({addr}: PaymentModalProps) {
         Enter Amount
       </button>
 
-      {/* The Modal */}
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <h2 className="text-xl font-semibold mb-4">Enter an Amount</h2>
         <p>Recipient Address: {addr}</p>

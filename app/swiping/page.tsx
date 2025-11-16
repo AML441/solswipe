@@ -4,15 +4,14 @@ import { useState, useRef, useEffect } from "react";
 import Card from "@/components/card";
 import Navbar from "@/components/navbar";
 import { Organization } from "@/types/organization";
-import { arrayRemove, arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
+import { arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
-import { items as importedItems } from "../../types/Items"; // Single source of truth
+import { items as importedItems } from "../../types/Items";
 import cosineSimilarity from "compute-cosine-similarity";
 import MultiSelect from "@/components/multiselect";
 import { tagTypes } from "@/types/organization";
 
-// Dummy embedding function, replace with real API call if needed
 async function generateEmbeddings() {
   const res = await fetch("/api/recommendations/embeddings");
   const data = await res.json();
@@ -186,15 +185,12 @@ export default function SwipingPage() {
     // Remove any undefined items after reordering
     const cleanedReordered = reordered.filter(item => item !== undefined);
 
-    // Update the items list and reset the current index
     setItems(cleanedReordered);
-
-    // Move to first item or reordered list
     setCurrentIndex(0);
   };
 
   const handleInterested = async () => {
-    await handleReorderingAndUpdate(safeCurrentIndex); // Call the reusable function
+    await handleReorderingAndUpdate(safeCurrentIndex);
   };
 
   const handleNotInterested = () => {
@@ -222,12 +218,12 @@ export default function SwipingPage() {
     const moveDiff = getClientX(e) - swipeStart;
 
     if (moveDiff > swipeThreshold) {
-      // Swipe right -> previous
+      // Swipe right -> interested and save org
       saveOrg(items[safeCurrentIndex].id);
       await handleReorderingAndUpdate(safeCurrentIndex);
       setCurrentIndex(0);
     } else if (moveDiff < -swipeThreshold) {
-      // Swipe left -> next
+      // Swipe left -> not interested
       setCurrentIndex((prev) => (prev + 1) % items.length);
     }
 
@@ -241,7 +237,6 @@ export default function SwipingPage() {
       <Navbar />
       <div className="flex-1 flex flex-col items-center p-6">
         
-        {/* Fixed dropdown at top - removed justify-center from parent */}
         <div className="w-full max-w-3xl mt-16">
           <MultiSelect
             label="Select Your Interests"
@@ -251,7 +246,6 @@ export default function SwipingPage() {
           />
         </div>
 
-        {/* Card section - centered with flex-1 to take remaining space */}
         <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full">
           {items.length > 0 ? (
             <div

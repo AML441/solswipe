@@ -9,17 +9,16 @@ import Modal from "./modal";
 import { simulateTransaction } from "@/lib/solana";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { tagTypes } from "@/types/organization";
-import { Badge } from "@/components/badge"; // Import Badge component
+import { Badge } from "@/components/badge";
 
 interface CardProps {
   key: string;
-  orgData: Organization & { id: string }; // Include id for Firestore
+  orgData: Organization & { id: string };
   liked: boolean;
   onLike: (newLiked: boolean) => void;
   showHeart: boolean;
 }
 
-// Define a mapping from tags to color names
 const tagColorMap: { [key in tagTypes]: string } = {
   [tagTypes.Education]: "blue",
   [tagTypes.Health]: "red",
@@ -30,7 +29,7 @@ const tagColorMap: { [key in tagTypes]: string } = {
   [tagTypes.Media]: "indigo",
   [tagTypes.Finance]: "orange",
   [tagTypes.Food]: "white",
-  [tagTypes.Other]: "gray",  // Default for Other
+  [tagTypes.Other]: "gray",
 };
 
 export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
@@ -39,7 +38,8 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false); // Add loading state
+  const [paymentSuccess, setPaymentSuccess] = useState<boolean | null>(null); // Track success/error
+  const [isProcessing, setIsProcessing] = useState(false);
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
 
@@ -90,35 +90,38 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
     // Validation
     if (!connected || !publicKey) {
       setPaymentStatus("Please connect your wallet before making a payment.");
+      setPaymentSuccess(false);
       return;
     }
 
     if (!amount || parseFloat(amount) <= 0) {
       setPaymentStatus("Please enter a valid amount.");
+      setPaymentSuccess(false);
       return;
     }
 
     if (!address) {
       setPaymentStatus("Recipient address is missing.");
+      setPaymentSuccess(false);
       return;
     }
 
     try {
       setIsProcessing(true);
       setPaymentStatus("Simulating transaction...");
+      setPaymentSuccess(null); // Reset status
 
-      // Pass connection from wallet provider
       const result = await simulateTransaction(
-        connection, // Use wallet's connection
+        connection,
         publicKey.toBase58(), 
         address, 
         parseFloat(amount)
       );
 
       if (result.success) {
-        setPaymentStatus(`${result.details}`);
+        setPaymentStatus(result.details || "Transaction simulated successfully!");
+        setPaymentSuccess(true);
         
-        // Optional: Log transaction details
         console.log("Simulation successful:", {
           from: publicKey.toBase58(),
           to: address,
@@ -132,13 +135,16 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
           setAmount("");
           setIsOpen(false);
           setPaymentStatus(null);
+          setPaymentSuccess(null);
         }, 2000);
       } else {
         setPaymentStatus(`Simulation failed: ${result.error}`);
+        setPaymentSuccess(false);
       }
     } catch (error) {
       console.error("Payment error:", error);
       setPaymentStatus("An unexpected error occurred.");
+      setPaymentSuccess(false);
     } finally {
       setIsProcessing(false);
     }
@@ -148,7 +154,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
     <div className="group w-auto h-auto text-black aspect-[9/7] flex flex-col justify-start p-[2.5em] bg-white border-1 relative border-gray-200 shadow-lg rounded-[.75em]">
       <div className="flex flex-row justify-between items-center">
         <p className="text-4xl">{name}</p>
-        {showHeart && (  // Conditionally render the heart based on showHeart prop
+        {showHeart && (
           <FaHeart
             className={`h-[3em] w-[3em] cursor-pointer transition-colors duration-300 ${
               liked ? "text-red-500" : "text-gray-400"
@@ -157,22 +163,23 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
           />
         )}
       </div>
-       {/* Display tags using Badge component */}
-     <div className="mt-4 mb-2 flex flex-wrap gap-2">
+      
+      <div className="mt-4 mb-2 flex flex-wrap gap-2">
         {tags?.map((tag: tagTypes, index: number) => {
-          // Use the tagColorMap to fetch color for the tag
           const tagColor = tagColorMap[tag]; 
           return (
             <Badge
               key={index}
               text={tag}
-              color={tagColor}  // Use the resolved color from the map
+              color={tagColor}
             />
           );
         })}
       </div>
+      
       <p className="text-2xl py-5">{description}</p>
       <p className="text-2xl">{contact}</p>
+      
       <div className="flex justify-center mt-auto">
         <button
           onClick={() => setIsOpen(true)}
@@ -184,17 +191,16 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
         <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
           <h2 className="text-xl font-semibold mb-4">Donate to {name}</h2>
           
-          {/* Show wallet connection status */}
           {!connected ? (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
               <p className="text-yellow-800 text-sm">
-                ⚠️ Please connect your wallet to simulate a donation.
+                Please connect your wallet to simulate a donation.
               </p>
             </div>
           ) : (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
               <p className="text-green-800 text-sm font-mono break-all">
-                ✅ Wallet: {publicKey?.toBase58()}
+                Wallet: {publicKey?.toBase58()}
               </p>
             </div>
           )}
@@ -234,11 +240,11 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
 
           {paymentStatus && (
             <div className={`mt-4 p-3 rounded ${
-              paymentStatus.includes("✅") 
+              paymentSuccess === true
                 ? "bg-green-50 text-green-800 border border-green-200" 
-                : paymentStatus.includes("⏳")
-                ? "bg-blue-50 text-blue-800 border border-blue-200"
-                : "bg-red-50 text-red-800 border border-red-200"
+                : paymentSuccess === false
+                ? "bg-red-50 text-red-800 border border-red-200"
+                : "bg-blue-50 text-blue-800 border border-blue-200"
             }`}>
               <p className="text-sm">{paymentStatus}</p>
             </div>
@@ -248,6 +254,7 @@ export default function Card({ orgData, liked, onLike, showHeart }: CardProps) {
             onClick={() => {
               setIsOpen(false);
               setPaymentStatus(null);
+              setPaymentSuccess(null);
               setAmount("");
             }}
             disabled={isProcessing}

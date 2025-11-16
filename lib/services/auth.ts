@@ -13,7 +13,7 @@ export const signInWithGoogle = async () => {
         email: user.email,
         name: user.displayName,
         photoURL: user.photoURL,
-        token: await user.getIdToken(), // send this to backend
+        token: await user.getIdToken(),
     };
 };
 
