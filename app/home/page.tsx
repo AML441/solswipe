@@ -179,35 +179,6 @@ export default function HomePage() {
             </div>
           )}
         </div>
-
-        {/* Select tagTypes */}
-         <div className="w-full max-w-3xl space-y-6"> {/* Space between components */}
-          <MultiSelect<tagTypes>
-            label="Select Your Interests"
-            options={Object.values(tagTypes)} // Convert enum to array of string values
-            selected={selectedTags}
-            onChange={setSelectedTags}
-          />
-
-          {/* Display the selected tags */}
-          <div className="flex flex-col items-start gap-2">
-            <p className="text-white text-lg">
-              <strong>Selected: </strong> 
-              {selectedTags.length > 0 ? (
-                <span className="text-cyan-200">{selectedTags.join(", ")}</span>
-              ) : (
-                <span className="italic text-gray-400">None</span>
-              )}
-            </p>
-            
-            {/* Match with orgs button */}
-            <Link href="/swiping">
-              <button className="px-6 py-3 bg-cyan-600 text-lg text-white rounded-lg hover:bg-cyan-700 transition duration-300 ease-in-out w-full sm:w-auto cursor-pointer">
-                Match with orgs!
-              </button>
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );

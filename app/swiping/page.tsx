@@ -7,8 +7,10 @@ import { Organization } from "@/types/organization";
 import { arrayRemove, arrayUnion, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
-import { items as importedItems } from "../../types/Items"; // single source of truth
+import { items as importedItems } from "../../types/Items"; // Single source of truth
 import cosineSimilarity from "compute-cosine-similarity";
+import MultiSelect from "@/components/multiselect";
+import { tagTypes } from "@/types/organization";
 
 // Dummy embedding function, replace with real API call if needed
 async function generateEmbeddings() {
@@ -44,9 +46,9 @@ export default function SwipingPage() {
   const [uid, setUid] = useState<string | null>(null);
   const [embeddings, setEmbeddings] = useState<number[][]>([]);
   const [items, setItems] = useState<Organization[]>(importedItems);
+  const [selectedTags, setSelectedTags] = useState<tagTypes[]>([]);
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
   const [seenIds, setSeenIds] = useState<string[]>([]);
-
 
   const cardRef = useRef<HTMLDivElement | null>(null);
   const swipeThreshold = 50;
@@ -72,32 +74,30 @@ export default function SwipingPage() {
     return () => unsubscribe();
   }, []);
 
- useEffect(() => {
-  if (!uid) return;
+  useEffect(() => {
+    if (!uid) return;
 
-  const userRef = doc(db, "users", uid);
-  getDoc(userRef)
-    .then((docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const savedIds = data.saved || [];
-        setSeenIds(savedIds);
+    const userRef = doc(db, "users", uid);
+    getDoc(userRef)
+      .then((docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const savedIds = data.saved || [];
+          setSeenIds(savedIds);
 
-        // Filter using savedIds
-        const filteredItems = importedItems.filter(
-          (org) => !savedIds.includes(org.id)
-        );
-        setItems(filteredItems);
-      } else {
-        setItems(importedItems);
-      }
-    })
-    .catch((err) => {
-      console.error("Error fetching seenIds:", err);
-    });
-}, [uid, importedItems.length]);
-
-
+          // Filter using savedIds
+          const filteredItems = importedItems.filter(
+            (org) => !savedIds.includes(org.id)
+          );
+          setItems(filteredItems);
+        } else {
+          setItems(importedItems);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching seenIds:", err);
+      });
+  }, [uid, importedItems.length]);
 
   // Generate embeddings once on mount
   useEffect(() => {
@@ -106,6 +106,21 @@ export default function SwipingPage() {
       console.log("Embeddings set in state:", data); // Log when embeddings are set
     });
   }, [items]);
+
+  useEffect(() => {
+    const filteredItems = importedItems.filter((org) => {
+      const matchesTag = selectedTags.length
+        ? selectedTags.every((tag) => org.tags.includes(tag))
+        : true;
+      const isNotSaved = !seenIds.includes(org.id);
+      return matchesTag && isNotSaved;
+    });
+
+    setItems(filteredItems);
+  }, [selectedTags, seenIds]);
+
+  // Ensure currentIndex is within bounds of items array
+  const safeCurrentIndex = Math.min(Math.max(currentIndex, 0), items.length - 1);
 
   // Save org to Firestore
   const saveOrg = async (orgId: string) => {
@@ -128,7 +143,6 @@ export default function SwipingPage() {
   };
 
   const handleReorderingAndUpdate = (currentIndex: number) => {
-    // If embeddings aren't loaded yet, fetch them
     if (!embeddings || embeddings.length === 0) {
       console.log("Embeddings not ready, fetching...");
       return generateEmbeddings().then((fetchedEmbeddings) => {
@@ -147,7 +161,7 @@ export default function SwipingPage() {
     }
 
     // Save the current organization
-    const currentOrgId = items[currentIndex].id;
+    const currentOrgId = items[safeCurrentIndex].id;
     saveOrg(currentOrgId);
 
     // Update seenIds (mark the item as saved)
@@ -157,7 +171,7 @@ export default function SwipingPage() {
     const filteredItems = items.filter((item) => item.id !== currentOrgId);
 
     // Get similar organizations based on the updated embeddings
-    const similarIndexes = getSimilarOrgs(currentIndex, embeddings);
+    const similarIndexes = getSimilarOrgs(safeCurrentIndex, embeddings);
 
     // Reorder the list, excluding the current org (saved item)
     const reordered = [
@@ -180,7 +194,7 @@ export default function SwipingPage() {
   };
 
   const handleInterested = async () => {
-    await handleReorderingAndUpdate(currentIndex); // Call the reusable function
+    await handleReorderingAndUpdate(safeCurrentIndex); // Call the reusable function
   };
 
   const handleNotInterested = () => {
@@ -209,10 +223,9 @@ export default function SwipingPage() {
 
     if (moveDiff > swipeThreshold) {
       // Swipe right -> previous
-      saveOrg(items[currentIndex].id);
-      await handleReorderingAndUpdate(currentIndex);
+      saveOrg(items[safeCurrentIndex].id);
+      await handleReorderingAndUpdate(safeCurrentIndex);
       setCurrentIndex(0);
-      // setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
     } else if (moveDiff < -swipeThreshold) {
       // Swipe left -> next
       setCurrentIndex((prev) => (prev + 1) % items.length);
@@ -223,75 +236,66 @@ export default function SwipingPage() {
     setIsSwiping(false);
   };
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeydown = async (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
-        setCurrentIndex((prev) => (prev + 1) % items.length);
-      } else if (e.key === "ArrowRight") {
-        saveOrg(items[currentIndex].id);
-        // setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-        await handleReorderingAndUpdate(currentIndex);
-        setCurrentIndex(0);
-      }
-    };
-    window.addEventListener("keydown", handleKeydown);
-    return () => window.removeEventListener("keydown", handleKeydown);
-  }, [currentIndex, uid, items]);
-
-  return (
+    return (
     <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
       <Navbar />
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 p-6">
-        <div
-          ref={cardRef}
-          className="w-full max-w-md"
-          onTouchStart={handleSwipeStart}
-          onTouchMove={handleSwipeMove}
-          onTouchEnd={handleSwipeEnd}
-          onMouseDown={handleSwipeStart}
-          onMouseMove={handleSwipeMove}
-          onMouseUp={handleSwipeEnd}
-          onMouseLeave={handleSwipeEnd}
-        >
-          <Card
-            key={items[currentIndex].id}
-            orgData={items[currentIndex]}
-            liked={likedMap[items[currentIndex].id] || false}
-            onLike={(newLiked) => {
-              setLikedMap((prev) => ({
-                ...prev,
-                [items[currentIndex].id]: newLiked,
-              }));
-
-              // update Firestore
-              const auth = getAuth();
-              const uid = auth.currentUser?.uid;
-              if (!uid) return;
-
-              const userRef = doc(db, "users", uid);
-              if (newLiked) {
-                setDoc(userRef, { saved: arrayUnion(items[currentIndex].id) }, { merge: true });
-              } else {
-                setDoc(userRef, { saved: arrayRemove(items[currentIndex].id) }, { merge: true });
-              }
-            }}
-            showHeart={false}
+      <div className="flex-1 flex flex-col items-center p-6">
+        
+        {/* Fixed dropdown at top - removed justify-center from parent */}
+        <div className="w-full max-w-3xl mt-16">
+          <MultiSelect
+            label="Select Your Interests"
+            options={Object.values(tagTypes)}
+            selected={selectedTags}
+            onChange={setSelectedTags}
           />
         </div>
-        <div className="flex gap-4 mt-4">
-          <button
-            onClick={handleNotInterested}
-            className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400 cursor-pointer"
-          >
-            Not Interested
-          </button>
-          <button
-            onClick={handleInterested}
-            className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 cursor-pointer"
-          >
-            Interested
-          </button>
+
+        {/* Card section - centered with flex-1 to take remaining space */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full">
+          {items.length > 0 ? (
+            <div
+              ref={cardRef}
+              className="w-full max-w-md"
+              onTouchStart={handleSwipeStart}
+              onTouchMove={handleSwipeMove}
+              onTouchEnd={handleSwipeEnd}
+              onMouseDown={handleSwipeStart}
+              onMouseMove={handleSwipeMove}
+              onMouseUp={handleSwipeEnd}
+              onMouseLeave={handleSwipeEnd}
+            >
+              <Card
+                key={items[safeCurrentIndex].id}
+                orgData={items[safeCurrentIndex]}
+                liked={likedMap[items[safeCurrentIndex].id] || false}
+                onLike={(newLiked) => {
+                  setLikedMap((prev) => ({
+                    ...prev,
+                    [items[safeCurrentIndex].id]: newLiked,
+                  }));
+                }}
+                showHeart={false}
+              />
+            </div>
+          ) : (
+            <div className="text-white text-xl">No Orgs to Display</div>
+          )}
+
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={handleNotInterested}
+              className="px-4 py-2 bg-gray-300 text-slate-900 rounded hover:bg-gray-400 cursor-pointer"
+            >
+              Not Interested
+            </button>
+            <button
+              onClick={handleInterested}
+              className="px-4 py-2 bg-cyan-200 text-slate-900 rounded hover:bg-teal-600 cursor-pointer"
+            >
+              Interested
+            </button>
+          </div>
         </div>
       </div>
     </div>
