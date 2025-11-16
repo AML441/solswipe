@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
+import { SparklesCore } from "@/components/sparkles";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,6 +29,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Sparkles at the root - never re-renders */}
+        <div className="fixed inset-0 w-full h-full pointer-events-none z-0">
+          <SparklesCore
+            id="tsparticles"
+            background="transparent"
+            minSize={0.6}
+            maxSize={1.4}
+            particleDensity={100}
+            className="w-full h-full"
+            particleColor="#FFFFFF"
+          />
+        </div>
+
         <Providers>{children}</Providers>
       </body>
     </html>
