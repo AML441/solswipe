@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import bs58 from "bs58";
 import { SigninMessage } from "@/lib/SigninMessage";
+import { getCsrfToken } from "next-auth/react";
 import Navbar from "@/components/navbar";
 
 export default function HomePage() {
@@ -62,14 +63,21 @@ export default function HomePage() {
       setIsSigningIn(true);
       const address = publicKey.toBase58();
       setWalletAddress(address); // Store the wallet address
+      const csrf = await getCsrfToken();
+
+      if (!csrf) {
+        alert("CSRF token missing! Cannot proceed with wallet sign-in.");
+        setIsSigningIn(false);
+        return;
+      }
 
       // Prepare message to sign
-      const csrf = crypto.randomUUID(); // simple nonce if you don't have CSRF token
+      // const csrf = crypto.randomUUID(); // simple nonce if you don't have CSRF token
       const message = new SigninMessage({
         domain: window.location.host,
         publicKey: address,
         statement: "Sign in with your Solana wallet",
-        nonce: csrf,
+        nonce: csrf || "",
       });
 
       const data = new TextEncoder().encode(message.prepare());
