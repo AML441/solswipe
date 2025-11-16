@@ -5,13 +5,13 @@ import { useState } from "react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   return (
-   < div>
+    <div>
       {/* Button to open sidebar */}
       <div className="bg-transparent top-0 h-screen w-[5em] flex-col items-start">
-        <button 
-          className="bg-transparent h-screen w-[5em] align-text-top text-white "
+        <button
+          className="bg-transparent h-screen w-[5em] align-text-top text-white cursor-pointer" 
           onClick={() => setIsOpen(true)}
         >
           Open Menu
@@ -21,7 +21,7 @@ export default function Navbar() {
       {/* Overlay */}
       <div
         className={`fixed inset-0 ${
-          isOpen ? " pointer-events-auto" : " pointer-events-none"
+          isOpen ? "pointer-events-auto" : "pointer-events-none"
         }`}
         onClick={() => setIsOpen(false)}
       ></div>
@@ -35,22 +35,49 @@ export default function Navbar() {
         <div className="p-4 flex justify-between items-center border-white border-b">
           <h2 className="text-xl text-white font-bold">Menu</h2>
           <button
-            className="p-1 text-white hover:text-gray-100"
+            className="p-1 text-white hover:text-gray-100 cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
             ✕
           </button>
         </div>
         <div className="p-4">
-         <ul className="text-white space-y-4 text-lg">
-          <li><Link href="/home">Home</Link></li>
-          <li><Link href="/swiping">Explore Orgs</Link></li>
-          <li><Link href="/testing">Saved Collection</Link></li>
-          <li><Link href="/">Logout</Link></li>
-        </ul>
+          <ul className="text-white space-y-4 text-lg">
+            <li>
+              <Link
+                href="/home"
+                className="block hover:bg-gray-700 p-2 rounded cursor-pointer"
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/swiping"
+                className="block hover:bg-gray-700 p-2 rounded cursor-pointer"
+              >
+                Explore Orgs
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/testing"
+                className="block hover:bg-gray-700 p-2 rounded cursor-pointer"
+              >
+                Saved Collection
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/"
+                className="block hover:bg-gray-700 p-2 rounded cursor-pointer"
+              >
+                Logout
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
-
   );
 }

@@ -1,15 +1,15 @@
 export enum tagTypes {
-    "Education",
-    "Health",
-    "Environment",
-    "AnimalWelfare",
-    "HumanRights",
-    "Tech",
-    "Media",
-    "Finance",
-    "Food",
-    "Other"
-    }
+  Education = "Education",
+  Health = "Health",
+  Environment = "Environment",
+  AnimalWelfare = "AnimalWelfare",
+  HumanRights = "HumanRights",
+  Tech = "Tech",
+  Media = "Media",
+  Finance = "Finance",
+  Food = "Food",
+  Other = "Other",
+}
 
 export interface Organization {
     id: string,

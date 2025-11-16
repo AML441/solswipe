@@ -87,7 +87,6 @@ export default function HomePage() {
 
       const data = new TextEncoder().encode(message.prepare());
       const signature = await signMessage(data);
-      const signatureBase58 = bs58.encode(signature);
 
       // Optional: send signature to backend if needed
       // await fetch("/api/verify-wallet-signature", { ... });
@@ -182,28 +181,32 @@ export default function HomePage() {
         </div>
 
         {/* Select tagTypes */}
-        <div className="w-full max-w-3xl flex flex-row items-center gap-6">
+         <div className="w-full max-w-3xl space-y-6"> {/* Space between components */}
           <MultiSelect<tagTypes>
             label="Select Your Interests"
-            options={Object.values(tagTypes)}
+            options={Object.values(tagTypes)} // Convert enum to array of string values
             selected={selectedTags}
-            onChange={(values) => {
-              setSelectedTags(values);
-            }}
+            onChange={setSelectedTags}
           />
-          <p className="mt-4 text-white">
-            Selected: {selectedTags.length > 0 ? selectedTags.join(", ") : "None"}
-          </p>
 
-          
+          {/* Display the selected tags */}
+          <div className="flex flex-col items-start gap-2">
+            <p className="text-white text-lg">
+              <strong>Selected: </strong> 
+              {selectedTags.length > 0 ? (
+                <span className="text-cyan-200">{selectedTags.join(", ")}</span>
+              ) : (
+                <span className="italic text-gray-400">None</span>
+              )}
+            </p>
+            
+            {/* Match with orgs button */}
             <Link href="/swiping">
-            <button
-              className="mt-3 px-4 py-2 bg-cyan-200 text-slate-900 rounded-lg"
-            >
-              Match with orgs!
-            </button>
+              <button className="px-6 py-3 bg-cyan-600 text-lg text-white rounded-lg hover:bg-cyan-700 transition duration-300 ease-in-out w-full sm:w-auto cursor-pointer">
+                Match with orgs!
+              </button>
             </Link>
-          
+          </div>
         </div>
       </div>
     </div>

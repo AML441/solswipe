@@ -24,13 +24,13 @@ export default function MultiSelect<T extends string>({
   };
 
   return (
-    <div className="w-64">
-      {label && <p className="mb-1 text-2xl text-white font-semibold">{label}</p>}
+    <div className="w-full max-w-3xl">
+      {label && <p className="text-2xl text-white font-bold">{label}</p>}
 
       {/* Select Box */}
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="w-full bg-white border border-gray-300 rounded-lg p-2 flex justify-between items-center"
+        className="w-full bg-white border border-gray-300 rounded-lg p-2 flex justify-between items-center cursor-pointer"
       >
         <span className="text-gray-700">
           {selected.length > 0 ? selected.join(", ") : "Select options"}
@@ -40,7 +40,7 @@ export default function MultiSelect<T extends string>({
 
       {/* Dropdown */}
       {open && (
-        <div className="mt-1 border border-gray-300 bg-white rounded-lg shadow-md p-2 max-h-48 overflow-y-auto">
+        <div className="mt-2 border border-gray-300 bg-white rounded-lg shadow-md p-2 max-h-48 overflow-y-auto">
           {options.map((opt) => (
             <label
               key={opt}
@@ -52,7 +52,7 @@ export default function MultiSelect<T extends string>({
                 onChange={() => toggleOption(opt)}
                 className="h-4 w-4"
               />
-              <span>{opt}</span>
+              <span className="text-gray-700">{opt}</span>
             </label>
           ))}
         </div>

@@ -43,9 +43,6 @@ export const LoginPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center px-5 py-16 bg-linear-to-b from-indigo-900 to-slate-900">
-            <div className="absolute top-0 left-0  overflow-hidden">
-                <Navbar />
-            </div>
         <div className="min-h-screen flex items-center justify-center px-5 py-16">
 
            <div className="w-full max-w-md bg-slate-900 rounded-xl p-8 shadow-lg border border-slate-100">
