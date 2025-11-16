@@ -10,7 +10,7 @@ import { db } from "@/lib/firebase";
 import { getAuth } from "firebase/auth";
 import { GoogleGenAI } from "@google/genai";
 import cosineSimilarity from "compute-cosine-similarity";
-import { items as importedItems, items } from "../testing/page"; // single source of truth
+import { items as importedItems, items } from "../../types/Items"; // single source of truth
 import { NextResponse } from "next/server";
 
 
@@ -27,7 +27,12 @@ async function generateEmbeddings() {
 
 
 // Calculate similarity indices
-function getSimilarOrgs(likedIndex: number, embeddings: number[][]): number[] {
+function getSimilarOrgs(likedIndex: number, embeddings?: number[][]): number[] {
+  if (!embeddings || embeddings.length === 0) {
+    console.warn("Embeddings not ready, returning empty similarity list");
+    return [];
+  }
+
   const similarities: { index: number; score: number }[] = [];
 
   for (let i = 0; i < embeddings.length; i++) {
@@ -37,8 +42,9 @@ function getSimilarOrgs(likedIndex: number, embeddings: number[][]): number[] {
   }
 
   similarities.sort((a, b) => b.score - a.score);
-  return similarities.map(s => s.index);
+  return similarities.map((s) => s.index);
 }
+
 
 export default function SwipingPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
