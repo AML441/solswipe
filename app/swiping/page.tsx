@@ -117,9 +117,19 @@ export default function SwipingPage() {
       .catch((err) => console.error("Error fetching seenIds:", err));
   }, [uid]);
 
-  // ----------------------
-  // Fetch embeddings
-  // ----------------------
+   useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        setCurrentIndex((prev) => (prev + 1) % items.length);
+      } else if (e.key === "ArrowRight") {
+        saveOrg(items[currentIndex].id);
+        setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+      }
+    };
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [currentIndex, uid, items]);
+
   useEffect(() => {
     generateEmbeddings().then((data) => {
       setEmbeddings(data);
@@ -127,9 +137,6 @@ export default function SwipingPage() {
     });
   }, []);
 
-  // ----------------------
-  // Filter items by selected tags
-  // ----------------------
   useEffect(() => {
     const filteredItems = importedItems
       .filter((org) => {
@@ -145,9 +152,6 @@ export default function SwipingPage() {
     setItems(filteredItems);
   }, [selectedTags, seenIds]);
 
-  // ----------------------
-  // Firestore save
-  // ----------------------
   const saveOrg = async (orgId: string) => {
     if (!uid) {
       console.error("User not logged in!");
@@ -162,11 +166,6 @@ export default function SwipingPage() {
       console.error("Failed to update saved org", err);
     }
   };
-
-  // ----------------------
-  // Handle reordering after interest
-  // ----------------------
- // Inside SwipingPage component
 
 
 // Declare useRef at the top of the component
@@ -247,11 +246,6 @@ const handleReorderingAndUpdate = async (index: number) => {
 };
 
 
-
-
-  // ----------------------
-  // Button handlers
-  // ----------------------
   const handleInterested = async () => {
     await handleReorderingAndUpdate(currentIndex);
   };
@@ -261,9 +255,6 @@ const handleReorderingAndUpdate = async (index: number) => {
     setCurrentIndex((prev) => (prev + 1) % items.length);
   };
 
-  // ----------------------
-  // Swipe handlers
-  // ----------------------
   const getClientX = (e: React.TouchEvent | React.MouseEvent) =>
     "touches" in e ? e.touches[0].clientX : e.clientX;
 
@@ -294,9 +285,6 @@ const handleReorderingAndUpdate = async (index: number) => {
     setIsSwiping(false);
   };
 
-  // ----------------------
-  // Render
-  // ----------------------
   return (
     <div className="min-h-screen bg-linear-to-b from-indigo-900 to-slate-900 flex flex-row">
       <Navbar />
@@ -348,14 +336,14 @@ const handleReorderingAndUpdate = async (index: number) => {
               Not Interested
             </button>
             <button
-  onClick={handleInterested}
-  disabled={!embeddingsReady || !(embeddings?.length > 0)}
-  className={`px-4 py-2 rounded cursor-pointer ${
-    !embeddingsReady ? 'bg-gray-500 text-gray-300' : 'bg-cyan-200 text-slate-900 hover:bg-teal-600'
-  }`}
->
-  Interested
-</button>
+                onClick={handleInterested}
+                disabled={!embeddingsReady || !(embeddings?.length > 0)}
+                className={`px-4 py-2 rounded cursor-pointer ${
+                  !embeddingsReady ? 'bg-gray-500 text-gray-300' : 'bg-cyan-200 text-slate-900 hover:bg-teal-600'
+                }`}
+              >
+                Interested
+            </button>
 
 
           </div>
